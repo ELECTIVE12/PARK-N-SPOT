@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Footer } from '../../components/footer';
 import { 
   LayoutDashboard, 
   Users, 
@@ -11,6 +12,7 @@ import {
   HelpCircle 
 } from 'lucide-react';
 import { motion } from 'motion/react';
+
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -97,22 +99,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md flex justify-between items-center w-full px-8 py-4 shadow-[0_12px_40px_rgba(27,28,25,0.06)]">
           <div className="flex items-center space-x-8">
             <h2 className="text-xl font-bold tracking-tight text-on-surface font-headline">{title}</h2>
-            <div className="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/10">
-              <Search size={16} className="text-on-surface-variant mr-2" />
-              <input 
-                className="bg-transparent border-none focus:ring-0 text-sm w-64 placeholder-on-surface-variant text-on-surface font-body" 
-                placeholder="Search reports..." 
-                type="text" 
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-6">
-            <button className="text-on-surface-variant hover:text-primary transition-colors bg-transparent border-none cursor-pointer">
-              <Bell size={20} />
-            </button>
-            <button className="text-on-surface-variant hover:text-primary transition-colors bg-transparent border-none cursor-pointer">
-              <HelpCircle size={20} />
-            </button>
           </div>
         </header>
 
@@ -120,10 +106,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         <div className="p-8 space-y-8 flex-1">
           {children}
         </div>
-
-        <footer className="p-8 pt-0 text-center text-xs text-on-surface-variant border-t border-outline-variant/10 mt-auto flex justify-center items-center">
-          <p className="font-body">© 2026 computer engineering students</p>
-        </footer>
+       <Footer />
       </main>
     </div>
   );

@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useAuth } from "@/src/App";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/src/components/Logo";
+import { Footer } from '../../components/footer';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -85,9 +86,7 @@ export function LoginScreen() {
         </div>
       </motion.main>
 
-      <footer className="fixed bottom-8 left-0 right-0 text-center pointer-events-none">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-on-surface-variant opacity-30">© 2026 computer engineering students</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
