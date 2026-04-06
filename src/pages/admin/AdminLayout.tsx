@@ -7,9 +7,6 @@ import {
   BarChart3, 
   AlertTriangle, 
   LogOut, 
-  Search, 
-  Bell, 
-  HelpCircle 
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -32,6 +29,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   const handleLogout = () => {
     localStorage.removeItem('isAdminLoggedIn');
+    window.dispatchEvent(new Event('auth-change'));
     navigate('/admin/login');
   };
 
