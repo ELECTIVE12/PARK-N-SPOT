@@ -102,9 +102,6 @@ function UsersScreen() {
     >
       <div className="mb-6 lg:mb-10 flex flex-col sm:flex-row justify-between items-start gap-6">
         <div className="w-full min-w-0">
-          <nav className="flex text-[10px] lg:text-xs text-on-surface-variant mb-2 space-x-2">
-            <span className="text-on-surface font-semibold">User Management</span>
-          </nav>
           <h1 className="text-2xl lg:text-4xl font-extrabold text-on-surface leading-tight break-words">Access Registry</h1>
           <p className="text-sm lg:text-base text-on-surface-variant mt-2 max-w-2xl break-words">Curate and oversee the operational staff and facility members of the Park 'N Spot ecosystem.</p>
         </div>

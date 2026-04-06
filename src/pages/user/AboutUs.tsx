@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Building, Sparkles, LayoutGrid, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Footer } from '../../components/footer';
 
 export default function AboutUs() {
   return (
@@ -169,6 +170,7 @@ export default function AboutUs() {
           ))}
         </div>
       </section>
+      <Footer />
     </div>
   );
 }

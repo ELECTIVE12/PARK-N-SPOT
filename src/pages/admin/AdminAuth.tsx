@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Castle, Lock, PersonStanding, Shield, Verified, ArrowRight } from 'lucide-react';
+import { Footer } from '../../components/footer';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -37,15 +38,15 @@ export function AdminLogin() {
         <div className="bg-surface-container-lowest shadow-[0_12px_40px_rgba(27,28,25,0.06)] rounded-xl p-10 backdrop-blur-md border border-outline-variant/10">
           <h2 className="text-xl font-bold text-on-surface mb-8 font-headline">Admin Authorization</h2>
           <form className="space-y-6" onSubmit={handleLogin}>
-            {/* Username Field */}
+            {/* Email Field */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="username">Username / Email</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="username">Email</label>
               <div className="relative">
                 <PersonStanding size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                 <input 
                   className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary text-sm pl-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface" 
                   id="username" 
-                  placeholder="curator@sovereign.com" 
+                  placeholder="abc123@gmail.com" 
                   type="text" 
                   required
                 />
@@ -55,7 +56,6 @@ export function AdminLogin() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">Password</label>
-                <a className="text-[10px] font-bold uppercase tracking-widest text-secondary hover:text-on-secondary-container transition-colors font-headline" href="#">Forgot Credentials?</a>
               </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
@@ -80,8 +80,7 @@ export function AdminLogin() {
           <div className="mt-10 pt-8 border-t border-outline-variant/20 flex flex-col items-center space-y-4">
             <p className="text-xs text-on-surface-variant/60 text-center font-body">Restricted access for facility curators and system leads only.</p>
             <div className="flex justify-center space-x-6">
-              <Link to="/admin/signup" className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors font-headline">Need an account?</Link>
-              <a className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors font-headline" href="#">Privacy Policy</a>
+              <Footer />
             </div>
           </div>
         </div>
@@ -193,7 +192,7 @@ export function AdminSignUp() {
       {/* Footer Component */}
       <footer className="w-full py-12 bg-surface-container-low flex flex-col items-center justify-center gap-4">
         <div className="flex flex-wrap justify-center gap-8 mb-2">
-          <a className="font-body text-xs tracking-widest uppercase text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 hover:underline underline-offset-4" href="#">Privacy Policy</a>
+          <a className="font-body text-xs tracking-widest uppercase text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 hover:underline underline-offset-4" href="#"> Policy</a>
           <a className="font-body text-xs tracking-widest uppercase text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 hover:underline underline-offset-4" href="#">Terms of Service</a>
           <a className="font-body text-xs tracking-widest uppercase text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 hover:underline underline-offset-4" href="#">Architecture Standards</a>
         </div>

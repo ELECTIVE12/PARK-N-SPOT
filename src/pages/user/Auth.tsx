@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, ArrowLeft, RefreshCw, Eye, EyeOff, LayoutGrid } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Footer } from '../../components/footer';
 import { store } from '@/src/lib/store';
 
 export function Login() {
@@ -329,15 +330,9 @@ export function Verify() {
           </div>
         </div>
       </main>
-
-      {/* Refined Footer */}
-      <footer className="w-full py-12 bg-transparent">
-        <div className="max-w-7xl mx-auto px-6 flex justify-center">
-          <p className="font-body text-[10px] tracking-[0.25em] uppercase text-on-surface-variant/60">
-            © 2026 computer engineering students
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
+    
+   
   );
 }
