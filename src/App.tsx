@@ -13,7 +13,7 @@ import Dashboard from './pages/admin/Dashboard';
 import UsersPage from './pages/admin/Users';
 import Complaints from './pages/admin/Complaints';
 import Reports from './pages/admin/Reports';
-import { AdminLogin, AdminSignUp } from './pages/admin/AdminAuth';
+import { AdminLogin } from './pages/admin/AdminAuth';
 
 function AppContent() {
   const location = useLocation();
@@ -80,7 +80,6 @@ function AppContent() {
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/signup" element={<AdminSignUp />} />
           <Route 
             path="/admin/dashboard" 
             element={isAdminLoggedIn ? <Dashboard /> : <Navigate to="/admin/login" />} 
