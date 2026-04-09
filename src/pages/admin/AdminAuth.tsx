@@ -1,18 +1,68 @@
 import React, { useState } from 'react';
 import { Footer } from '../../components/footer'
 import Logo from "../../components/Logo/logo.png";
-import { Link, useNavigate } from 'react-router-dom';
-import { Lock, PersonStanding, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, PersonStanding, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export function AdminLogin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [touched, setTouched] = useState({ email: false, password: false });
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address (e.g., admin@example.com)';
+    return '';
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) return 'Password is required';
+    return '';
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (touched.email) {
+      setErrors(prev => ({ ...prev, email: validateEmail(value) }));
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    if (touched.password) {
+      setErrors(prev => ({ ...prev, password: validatePassword(value) }));
+    }
+  };
+
+  const handleBlur = (field: 'email' | 'password') => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    if (field === 'email') {
+      setErrors(prev => ({ ...prev, email: validateEmail(email) }));
+    } else {
+      setErrors(prev => ({ ...prev, password: validatePassword(password) }));
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('isAdminLoggedIn', 'true');
-    window.dispatchEvent(new Event('auth-change'));
-    navigate('/admin/dashboard');
+    
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    
+    setTouched({ email: true, password: true });
+    setErrors({ email: emailError, password: passwordError });
+    
+    if (!emailError && !passwordError) {
+      localStorage.setItem('isAdminLoggedIn', 'true');
+      window.dispatchEvent(new Event('auth-change'));
+      navigate('/admin/dashboard');
+    }
   };
 
   return (
@@ -27,43 +77,61 @@ export function AdminLogin() {
       <main className="relative z-10 w-full max-w-md mx-auto flex-1 flex items-center">
         <div className="w-full">
           {/* Brand Header */}
-        <div className="text-center mb-12">
-          <div className="relative inline-block">
-            <img src={Logo} alt="Logo" className="w-46 h-46 object-contain" />
-            <h1 className="text-5xl font-bold tracking-tight text-on-surface font-headline absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 whitespace-nowrap">Park 'n Spot</h1>
+          <div className="text-center mb-12">
+            <div className="relative inline-block">
+              <img src={Logo} alt="Logo" className="w-46 h-46 object-contain" />
+              <h1 className="text-5xl font-bold tracking-tight text-on-surface font-headline absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 whitespace-nowrap">Park 'n Spot</h1>
+            </div>
+            <p className="text-on-surface-variant font-medium tracking-tight font-body mt-3">Admin Access Portal</p>
           </div>
-          <p className="text-on-surface-variant font-medium tracking-tight font-body mt-3">Admin Access Portal</p>
-        </div>
+          
           {/* Login Card */}
           <div className="bg-surface-container-lowest shadow-[0_12px_40px_rgba(27,28,25,0.06)] rounded-xl p-10 backdrop-blur-md border border-outline-variant/10">
             <h2 className="text-xl font-bold text-on-surface mb-8 font-headline">Admin Authorization</h2>
             <form className="space-y-6" onSubmit={handleLogin}>
               {/* Email Field */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="username">Email</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="email">
+                  Email
+                </label>
                 <div className="relative">
-                  <PersonStanding size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                  <PersonStanding size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.email && touched.email ? 'text-error' : 'text-on-surface-variant'}`} />
                   <input 
-                    className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary text-sm pl-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface" 
-                    id="username" 
+                    className={`w-full bg-surface-container-high focus:ring-1 focus:ring-primary text-sm pl-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface outline-none ${errors.email && touched.email ? 'ring-1 ring-error' : ''}`}
+                    id="email" 
                     placeholder="admin@gmail.com" 
-                    type="text" 
+                    type="email" 
+                    value={email}
+                    onChange={handleEmailChange}
+                    onBlur={() => handleBlur('email')}
                     required
                   />
                 </div>
+                {errors.email && touched.email && (
+                  <div className="flex items-center gap-1 mt-1 text-error text-xs">
+                    <AlertCircle size={12} />
+                    <span>{errors.email}</span>
+                  </div>
+                )}
               </div>
+              
               {/* Password Field */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">Password</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">
+                    Password
+                  </label>
                 </div>
                 <div className="relative">
-                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                  <Lock size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.password && touched.password ? 'text-error' : 'text-on-surface-variant'}`} />
                   <input 
-                    className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary text-sm pl-12 pr-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface" 
+                    className={`w-full bg-surface-container-high focus:ring-1 focus:ring-primary text-sm pl-12 pr-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface outline-none ${errors.password && touched.password ? 'ring-1 ring-error' : ''}`}
                     id="password" 
                     placeholder="••••••••" 
                     type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={handlePasswordChange}
+                    onBlur={() => handleBlur('password')}
                     required
                   />
                   <button 
@@ -74,10 +142,20 @@ export function AdminLogin() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {errors.password && touched.password && (
+                  <div className="flex items-center gap-1 mt-1 text-error text-xs">
+                    <AlertCircle size={12} />
+                    <span>{errors.password}</span>
+                  </div>
+                )}
               </div>
+              
               {/* Primary Action */}
               <div className="pt-4">
-                <button className="w-full bg-primary-container text-secondary-container py-5 rounded-sm font-bold tracking-tight text-sm flex items-center justify-center space-x-2 hover:bg-primary-container transition-all active:scale-[0.98] shadow-lg shadow-primary/20 border-none cursor-pointer font-headline" type="submit">
+                <button 
+                  className="w-full bg-primary-container text-secondary-container py-5 rounded-sm font-bold tracking-tight text-sm flex items-center justify-center space-x-2 hover:bg-primary-container transition-all active:scale-[0.98] shadow-lg shadow-primary/20 border-none cursor-pointer font-headline" 
+                  type="submit"
+                >
                   <span>Log In</span>
                   <ArrowRight size={16} />
                 </button>

@@ -1,18 +1,18 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight} from "lucide-react";
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie } from "recharts";
-import { StatData } from "@/src/types";
+import { StatData } from "../../types";
 import { motion } from "motion/react";
-import { store } from "@/src/lib/store";
+import { store } from "../../lib/store";
 import AdminLayout from "./AdminLayout";
 
 const lineData = [
-  { name: '06:00', value: 150, turnover: 180 },
-  { name: '10:00', value: 120, turnover: 150 },
-  { name: '14:00', value: 160, turnover: 170 },
-  { name: '18:00', value: 80, turnover: 140 },
-  { name: '22:00', value: 110, turnover: 130 },
+  { time: '06:00', occupancy: 150, vacancy: 180 },
+  { time: '10:00', occupancy: 120, vacancy: 150 },
+  { time: '14:00', occupancy: 160, vacancy: 170 },
+  { time: '18:00', occupancy: 80, vacancy: 140 },
+  { time: '22:00', occupancy: 110, vacancy: 130 },
 ];
 
 const pieData = [
@@ -54,12 +54,7 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div className="w-full min-w-0">
           <h3 className="text-2xl lg:text-4xl font-extrabold text-on-surface mb-1 break-words">Operational Overview</h3>
-          <p className="text-on-surface-variant max-w-md text-sm lg:text-base break-words">Real-time telemetry and capacity distribution for the Park 'N Spot Central District.</p>
         </div>
-        <button className="w-full sm:w-auto bg-surface-container-highest text-on-surface px-4 py-2 rounded-sm text-xs font-bold flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all border border-outline-variant/30 shrink-0">
-          <FileText className="w-4 h-4" />
-          Export PDF
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
@@ -97,7 +92,7 @@ export function Dashboard() {
             <h5 className="text-lg font-bold">Usage Trends</h5>
             <div className="flex space-x-4">
               <span className="flex items-center text-xs text-on-surface-variant"><span className="w-2 h-2 rounded-full bg-primary mr-2"></span>Occupancy</span>
-              <span className="flex items-center text-xs text-on-surface-variant"><span className="w-2 h-2 rounded-full bg-secondary mr-2"></span>Turnover</span>
+              <span className="flex items-center text-xs text-on-surface-variant"><span className="w-2 h-2 rounded-full bg-secondary mr-2"></span>Vacancy</span>
             </div>
           </div>
           <div className="h-64">
@@ -109,10 +104,10 @@ export function Dashboard() {
                     <stop offset="95%" stopColor="#3e0502" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
+                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold' }} />
                 <Tooltip />
-                <Area type="monotone" dataKey="value" stroke="#3e0502" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
-                <Area type="monotone" dataKey="turnover" stroke="#735a39" strokeWidth={2} strokeDasharray="8 4" fill="transparent" />
+                <Area type="monotone" dataKey="occupancy" stroke="#3e0502" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
+                <Area type="monotone" dataKey="vacancy" stroke="#735a39" strokeWidth={2} strokeDasharray="8 4" fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

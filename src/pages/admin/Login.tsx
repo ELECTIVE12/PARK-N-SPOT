@@ -1,8 +1,8 @@
 import { User, Lock, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
-import { useAuth } from "@/src/App";
+import useAuth from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { Logo } from "@/src/components/Logo";
+import Logo from "../../components/Logo/logo.png";
 import { Footer } from '../../components/footer';
 
 export function LoginScreen() {
