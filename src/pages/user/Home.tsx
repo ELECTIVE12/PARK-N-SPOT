@@ -1,8 +1,9 @@
+
 import React from 'react';
-import { motion } from 'motion/react';
-import { MapPin, TrendingUp, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Footer } from '../../components/footer';
+import {motion} from 'motion/react';
+import {MapPin, TrendingUp, ArrowRight} from 'lucide-react';
+import {Link} from 'react-router-dom';
+import {Footer} from '../../components/footer';
 
 export default function Home() {
   return (
