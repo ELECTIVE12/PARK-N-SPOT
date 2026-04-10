@@ -1,130 +1,149 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Clock, Star, ArrowRight, TrendingUp, ShieldCheck } from 'lucide-react';
+import { MapPin, TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Footer } from '../../components/footer';
 
 export default function Home() {
   return (
-    <main className="pt-28 pb-24 px-6 md:px-12 max-w-7xl mx-auto">
-      <header className="mb-12">
+    <main className="flex flex-col lg:ml-32">
+
+      {/* HERO */}
+      <section className="relative min-h-screen flex items-center px-8 md:px-20 bg-surface-container-low overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex flex-col gap-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl"
         >
-          <span className="text-secondary font-headline tracking-[0.2em] uppercase text-[10px] font-bold">Welcome back, Curator</span>
-          <h1 className="text-4xl md:text-5xl font-headline font-black tracking-tight text-on-surface">Your Mobility Dashboard</h1>
+          <span className="text-secondary font-headline tracking-[0.3em] uppercase text-xs mb-6 block font-bold">
+            Where every space becomes a moment of convenience
+          </span>
+
+          <h1 className="text-6xl md:text-7xl font-headline font-extrabold tracking-tight mb-6 text-primary">
+            Park ‘n <span className="text-[#660000]">Spot</span>
+          </h1>
+
+          <p className="text-lg text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+            Easily locate available parking spaces with real-time updates, predictive trends, and community-powered reports.
+          </p>
+
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/explore"
+              className="bg-[#660000] text-surface-container px-10 py-4 font-headline font-bold rounded-sm tracking-wide hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg flex items-center gap-2"
+            >
+              View Map <ArrowRight size={16} />
+            </Link>
+
+            <Link
+              to="/login"
+              className="border border-outline-variant/50 px-10 py-4 text-on-surface font-headline font-semibold rounded-sm tracking-wide hover:bg-surface transition-all"
+            >
+              Log In
+            </Link>
+          </div>
         </motion.div>
-      </header>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Quick Actions & Stats */}
-        <section className="lg:col-span-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-primary-container p-8 rounded-xl text-on-primary relative overflow-hidden group">
-              <div className="relative z-10">
-                <h3 className="text-2xl font-headline font-bold mb-2">Find a Spot</h3>
-                <p className="text-on-primary-container text-sm mb-6 max-w-[200px]">Real-time availability across the Sovereign Network.</p>
-                <Link to="/explore" className="inline-flex items-center gap-2 bg-surface text-primary px-6 py-3 rounded-sm font-headline font-bold text-xs uppercase tracking-widest hover:bg-secondary-container transition-all">
-                  Explore Map <ArrowRight size={14} />
-                </Link>
-              </div>
-              <MapPin size={120} className="absolute -bottom-4 -right-4 text-on-primary-container/20 group-hover:scale-110 transition-transform duration-500" />
-            </div>
+      {/* MAP PREVIEW */}
+      <section className="py-24 px-8 md:px-20 bg-surface">
+        <div className="mb-10 flex justify-between items-center">
+          <h2 className="text-3xl font-headline font-bold text-primary">
+            Parking Map Overview
+          </h2>
+          <Link to="/explore" className="text-sm font-bold text-secondary uppercase hover:underline">
+            Open Full Map
+          </Link>
+        </div>
 
-            <div className="bg-surface-container-low p-8 rounded-xl border border-outline-variant/30 flex flex-col justify-between">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-headline font-bold text-on-surface">Active Session</h3>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-widest font-bold mt-1">West Wing Pavilion</p>
-                </div>
-                <div className="bg-secondary-container p-2 rounded-full text-on-secondary-container">
-                  <Clock size={20} />
-                </div>
-              </div>
-              <div className="mt-8">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-3xl font-black text-on-surface">02:45:12</span>
-                  <span className="text-xs font-bold text-secondary">ELAPSED</span>
-                </div>
-                <div className="w-full h-1 bg-outline-variant/30 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: '65%' }}
-                    className="h-full bg-secondary"
-                  />
-                </div>
-              </div>
-            </div>
+        <div className="h-72 bg-surface-container-low rounded-sm flex items-center justify-center text-on-surface-variant border border-outline-variant/30">
+          Map Preview (Static Template)
+        </div>
+      </section>
+
+      {/* AVAILABILITY + TRENDS */}
+      <section className="py-24 px-8 md:px-20 bg-surface-container-low">
+        <div className="grid md:grid-cols-2 gap-8">
+
+          <div className="bg-surface p-8 rounded-sm border-l-4 border-[#660000]">
+            <h3 className="text-lg font-headline font-bold mb-2 text-primary">
+              Available Slots
+            </h3>
+            <p className="text-4xl font-black text-[#660000]">128</p>
+            <p className="text-sm text-on-surface-variant mt-2">
+              Across nearby parking areas
+            </p>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-surface-container-low rounded-xl p-8 border border-outline-variant/30">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-headline font-bold text-on-surface uppercase tracking-tight">Recent Activity</h3>
-              <Link to="/history" className="text-xs font-bold text-secondary uppercase tracking-widest hover:underline">View All</Link>
+          <div className="bg-surface p-8 rounded-sm border border-outline-variant/30">
+            <div className="flex items-center gap-2 mb-3 text-primary">
+              <TrendingUp size={18} />
+              <h3 className="text-lg font-headline font-bold">
+                Peak Hours
+              </h3>
             </div>
-            <div className="space-y-4">
-              {[
-                { name: 'The Grand Pavilion', date: 'Today, 10:24 AM', type: 'Valet Entry', status: 'Active' },
-                { name: 'East Plaza Underground', date: 'Yesterday, 06:15 PM', type: 'Self-Park', status: 'Completed' },
-                { name: 'Observation Deck North', date: 'May 12, 02:30 PM', type: 'Valet Entry', status: 'Completed' },
-              ].map((activity, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-surface rounded-lg group hover:bg-surface-container-high transition-all cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-surface-container-highest rounded-sm flex items-center justify-center text-on-surface-variant">
-                      <TrendingUp size={18} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-on-surface text-sm">{activity.name}</h4>
-                      <p className="text-xs text-on-surface-variant">{activity.date} • {activity.type}</p>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
-                    activity.status === 'Active' ? 'bg-secondary-container text-on-secondary-container' : 'bg-outline-variant/20 text-on-surface-variant'
-                  }`}>
-                    {activity.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Sidebar Info */}
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="bg-surface-container p-8 rounded-xl space-y-6">
-            <h3 className="font-headline font-bold text-on-surface uppercase tracking-widest text-xs">Curator Insights</h3>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="text-secondary mt-1"><Star size={20} fill="currentColor" /></div>
-                <div>
-                  <h4 className="font-bold text-sm text-on-surface">Elite Status Maintained</h4>
-                  <p className="text-xs text-on-surface-variant leading-relaxed mt-1">Your contributions to the Sovereign Network have kept your status in the top 5% of curators.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="text-secondary mt-1"><ShieldCheck size={20} /></div>
-                <div>
-                  <h4 className="font-bold text-sm text-on-surface">Security Protocol Active</h4>
-                  <p className="text-xs text-on-surface-variant leading-relaxed mt-1">All facility access points are currently operating under standard Sovereign encryption.</p>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-on-surface-variant">
+              Parking is usually full between <strong>5 PM - 7 PM</strong>. Best time is before 9 AM.
+            </p>
           </div>
 
-          <div className="bg-secondary-container p-8 rounded-xl relative overflow-hidden">
-            <div className="relative z-10">
-              <h3 className="text-xl font-headline font-bold text-on-secondary-container mb-2">Need Assistance?</h3>
-              <p className="text-sm text-on-secondary-container/80 mb-6">Our digital concierge is available 24/7 for elite tier members.</p>
-              <button className="w-full py-3 bg-on-secondary-container text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:opacity-90 transition-all">
-                Contact Concierge
-              </button>
+        </div>
+      </section>
+
+      {/* USER REPORTS */}
+      <section className="py-24 px-8 md:px-20 bg-surface">
+        <div className="mb-10 flex justify-between items-center">
+          <h2 className="text-3xl font-headline font-bold text-primary">
+            Recent Reports
+          </h2>
+          <Link to="/reports" className="text-sm font-bold text-secondary uppercase hover:underline">
+            View All
+          </Link>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            { location: 'Main Street Parking', slots: '5 slots available' },
+            { location: 'City Mall Basement', slots: 'Almost full' },
+            { location: 'Riverside Parking', slots: '12 slots available' },
+          ].map((report, i) => (
+            <div
+              key={i}
+              className="flex justify-between items-center p-5 bg-surface-container-low rounded-sm border border-outline-variant/30"
+            >
+              <div className="flex items-center gap-3">
+                <MapPin size={16} className="text-[#660000]" />
+                <span className="font-bold text-sm">{report.location}</span>
+              </div>
+              <span className="text-xs text-on-surface-variant">
+                {report.slots}
+              </span>
             </div>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-on-secondary-container/5 rounded-full -mr-12 -mt-12"></div>
-          </div>
-        </aside>
-      </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 px-8 md:px-20 bg-surface-container-low text-center">
+        <h2 className="text-3xl font-headline font-bold mb-4 text-primary">
+          Start Finding Parking
+        </h2>
+        <p className="text-on-surface-variant mb-8">
+          Log in to access full features and contribute parking reports.
+        </p>
+
+        <Link
+          to="/login"
+          className="inline-block w-full max-w-sm bg-[#660000] py-4 text-surface-container font-headline font-bold text-sm tracking-[0.2em] uppercase rounded-sm hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg"
+        >
+          LOG IN
+        </Link>
+      </section>
+
+      {/* FOOTER */}
+      <Footer />
+
     </main>
   );
 }
