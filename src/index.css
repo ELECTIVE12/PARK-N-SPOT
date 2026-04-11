@@ -58,3 +58,12 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@layer utilities {
+  .text-error {
+    color: var(--color-error);
+  }
+  .ring-error {
+    --tw-ring-color: var(--color-error);
+  }
+}

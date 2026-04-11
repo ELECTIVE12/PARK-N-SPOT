@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Footer } from '../../components/footer';
+import Logo from "../../components/Logo/logo.png";
 import { 
   LayoutDashboard, 
   Users, 
+  CircleUserRound,
   BarChart3, 
   AlertTriangle, 
   LogOut, 
@@ -36,25 +38,21 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   return (
     <div className="bg-background text-on-surface flex min-h-screen">
       {/* SideNavBar */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col py-8 space-y-6 z-40 border-r border-outline-variant/10">
-        <div className="px-8 mb-4">
-          <Link to="/admin/dashboard" className="font-black tracking-tighter text-on-surface text-2xl font-headline">
-            Park 'N Spot
-          </Link>
+      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-high flex flex-col py-8 space-y-6 z-40 border-r border-outline-variant/10">
+       <div className="text-center mb-12">
+            <div className="relative inline-block">
+              <img src={Logo} alt="Logo" className="w-26 h-26 object-contain" />
+              <Link to="/user/aboutus" className="text-2xl font-bold tracking-tight text-on-surface font-headline absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 whitespace-nowrap">Park 'n Spot</Link>
+            </div>
         </div>
 
         {/* Profile section */}
-        <div className="px-8 flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
-            <img 
-              alt="System Curator" 
-              className="w-full h-full object-cover" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuACVBnlOVyyr1znSmg_cNozPlTN_AxqNfNWMBeNLSXvx3grpl-gkZOX2JvVi0NoSSjmJZ7GSKl9x9Xtf-R8ENFr-peW1x5H0NtJIcIgfHZQ9f-Ph-7lO7ZJ33PskFRQoGzhibHt9eKnhWqzsjssBCjUaRNgw4CMq3O3VAM30FRlSGocpf6QfzcYVbjpYJ_RD3fqRWH3XCCmyz9-MqDW5Q6doME_GcVC3P85yKbUA7tI8llDessme1MCoELq7SD-3fkB2aKcrdKJg9zT"
-              referrerPolicy="no-referrer"
-            />
+        <div className="px-8 flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 rounded-full bg-surface-container-low overflow-hidden">
+            <CircleUserRound className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-on-surface font-bold text-sm font-headline">The Curator</p>
+            <p className="text-on-surface font-bold text-sm font-headline">Admin</p>
             <p className="text-on-surface-variant text-xs font-body">Facility Lead</p>
           </div>
         </div>
@@ -69,8 +67,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 to={item.path}
                 className={`flex items-center space-x-3 py-3 transition-all pl-5 ${
                   isActive 
-                    ? 'text-on-surface font-bold border-l-4 border-primary bg-surface-container-high/50' 
-                    : 'text-on-surface-variant hover:bg-surface-container-high'
+                    ? 'text-on-surface font-bold border-l-4 border-primary bg-surface-container-low' 
+                    : 'text-on-surface-variant hover:bg-surface-container-low'
                 }`}
               >
                 <Icon size={20} className={isActive ? 'text-primary' : ''} />

@@ -60,3 +60,4 @@ export interface Report {
   notes: string;
   createdAt: string;
 }
+
