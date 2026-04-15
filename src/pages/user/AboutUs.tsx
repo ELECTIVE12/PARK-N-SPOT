@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Building, Sparkles, LayoutGrid, ExternalLink, Zap, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Mail } from "lucide-react";
-import { Footer } from '../../components/footer';
+import { UserFooter } from '../../components/userFooter';
 import parking from "../../components/images/parking.jpg";
 import firstabt from "../../components/images/firstabt.jpg";
 import secondabt from "../../components/images/secondabt.jpg";
@@ -15,7 +15,7 @@ import ervin from "../../components/images/ervin.jpg";
 
 export default function AboutUs() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen">
 
       <section className="relative h-screen flex items-center px-8 md:px-20 overflow-hidden bg-surface-container-low">
         <div className="absolute inset-0 z-0 opacity-10">
@@ -206,7 +206,7 @@ export default function AboutUs() {
           ))}
         </div>
       </section>
-      <Footer />
+      <UserFooter />
     </div>
   );
 

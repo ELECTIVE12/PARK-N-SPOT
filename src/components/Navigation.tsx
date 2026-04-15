@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Settings2, Home, History, FileText, User, Map as MapIcon, Wallet, LogOut } from 'lucide-react';
+import { Bell, Settings2, Home, History, FileText, User, Map as MapIcon, Wallet, LogOut, LayoutGrid } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
 export function TopNav() {
@@ -103,15 +103,12 @@ export function BottomNav() {
 
 export function Footer() {
   return (
-    <footer className="py-12 bg-surface-container-low border-t border-outline-variant/10">
+    <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6">
-        <span className="font-headline font-bold text-xl tracking-tighter text-[#330000]">Park 'N Spot</span>
-        <div className="flex gap-8">
-          <a href="#" className="text-on-surface-variant hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest">Privacy</a>
-          <a href="#" className="text-on-surface-variant hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest">Terms</a>
-          <Link to="/admin/login" className="text-on-surface-variant hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest">Admin Portal</Link>
-        </div>
-        <p className="text-on-surface-variant text-xs opacity-60">© 2026 Park 'N Spot. Computer Engineering Students. All rights reserved.</p>
+       <header className="flex items-center gap-3 mb-4">
+          <h1 className="font-headline font-black text-2xl tracking-tighter text-primary text-[#330000]">Park ‘n Spot</h1>
+        </header>
+        <p className="text-on-surface-variant font-bold tracking-[0.3em] text-[10px] opacity-40 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
       </div>
     </footer>
   );
