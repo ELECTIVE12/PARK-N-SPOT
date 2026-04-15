@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, ArrowLeft, RefreshCw, LayoutGrid } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Footer } from '../../components/footer';
+import { UserFooter } from '../../components/userFooter';
 import { store } from '@/src/lib/store';
 import smart from "../../components/images/smart.png";
 import findparkgo from "../../components/images/findparkgo.png";
@@ -17,10 +17,10 @@ export function Login() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Try to find existing user or create one
+
     const user = store.loginUser(email, password);
     if (!user) {
-      // Create a new user if not found
+    
       store.registerUser(email.split('@')[0], email, password);
     }
     localStorage.setItem('isLoggedIn', 'true');
@@ -179,7 +179,7 @@ export function Login() {
             </div>
           </form>
         </div>
-        <Footer />
+        <UserFooter/>
       </section>
     </main>
   );
@@ -381,7 +381,7 @@ export function SignUp() {
                   </Link>
                 </div>
               </form>
-              <Footer />
+              <UserFooter />
             </div>
           </div>
         </div>
@@ -452,7 +452,7 @@ export function Verify() {
           </div>
         </div>
       </main>
-      <Footer />
+      <UserFooter />
     </div>
 
 

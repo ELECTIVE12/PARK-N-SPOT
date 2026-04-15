@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { TopNav, BottomNav, Footer } from './components/Navigation';
+import { TopNav, BottomNav, Footer  } from './components/Navigation';
 import Home from './pages/user/Home';
 import AboutUs from './pages/user/AboutUs';
 import Explore from './pages/user/Explore';
@@ -14,6 +14,7 @@ import UsersPage from './pages/admin/Users';
 import Complaints from './pages/admin/Complaints';
 import Reports from './pages/admin/Reports';
 import { AdminLogin } from './pages/admin/AdminAuth';
+
 
 function AppContent() {
   const location = useLocation();
@@ -100,6 +101,7 @@ function AppContent() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to={isLoggedIn ? "/explore" : "/"} />} />
         </Routes>
+       
       </div>
       {!shouldHideNav && <BottomNav />}
       {!shouldHideNav && <Footer />}
