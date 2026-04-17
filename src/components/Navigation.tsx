@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Settings2, Home, History, FileText, User, Map as MapIcon, Wallet, LogOut, LayoutGrid } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import profile from "./images/profile.jpg";
+
 
 export function TopNav() {
   const location = useLocation();
@@ -23,7 +25,7 @@ export function TopNav() {
   return (
     <nav className="fixed top-0 w-full z-50 glass-nav flex justify-between items-center px-8 h-20">
       <div className="flex items-center gap-8">
-        <Link to="/home" className="text-xl font-headline font-extrabold tracking-tighter text-[#330000]">
+        <Link to="/home" className="text-xl font-headline font-extrabold  ml-8 tracking-tighter text-[#330000]">
           Park 'N Spot
         </Link>
         <div className="hidden md:flex gap-8">
@@ -48,17 +50,10 @@ export function TopNav() {
         <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
           <Bell size={20} />
         </button>
-        <button 
-          onClick={handleLogout}
-          className="p-2 text-on-surface-variant hover:text-error transition-colors flex items-center gap-2"
-          title="Logout"
-        >
-          <LogOut size={20} />
-        </button>
         <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20">
           <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9Hcla8EkRASSPQ318THjinKC3MLaLENd78ZF_wUVxqrycfFIbCxJiGHLgMHMMUbWTGx8ekV9xnIIVZEox1jvesAhOP50NL-dROHCpO-SKwnJJRG7T1xAwaZvZ3jvpXYf6JC-ghgE9erC1hsP4XSGBbyb4r1zrBSMtt_eksv6-umaz-_jkGfAuRr73L7xVYH6BajB6GeXyPUIBj5DJXdECd2BJTLiU2bH8tJT-zE_VblG_U4pwRlSVp-FzRT_q8Mx3hII_FSSTHcXg" 
-            alt="Profile"
+            src={profile} 
+            alt="profile picture"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
@@ -105,10 +100,10 @@ export function Footer() {
   return (
     <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6">
-       <header className="flex items-center gap-3 mb-4">
+       <header className="flex items-center gap-3 mb-4 ml-15">
           <h1 className="font-headline font-black text-2xl tracking-tighter text-primary text-[#330000]">Park ‘n Spot</h1>
         </header>
-        <p className="text-on-surface-variant font-bold tracking-[0.3em] text-[10px] opacity-40 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
+        <p className="text-on-surface-variant font-bold uppercase text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
       </div>
     </footer>
   );

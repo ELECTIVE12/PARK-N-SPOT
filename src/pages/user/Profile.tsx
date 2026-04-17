@@ -1,8 +1,7 @@
 import React from 'react';
-import { motion } from 'motion/react';
-import { Award, Grid3X3, Ticket, ConciergeBell, CreditCard, PlusCircle, Home, Briefcase, Dumbbell, ReceiptText, LogOut } from 'lucide-react';
+import { PlusCircle, Home, Briefcase, Dumbbell, ReceiptText, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -40,14 +39,14 @@ export default function Profile() {
     <main className="pt-28 pb-24 px-4 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
 
       <div className="md:col-span-12 space-y-8">
-        <header className="mb-8 flex justify-between items-end">
+        <header className="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
           <div>
-            <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-primary mb-3">Account Settings</h1>
-            <p className="text-on-surface-variant font-body max-w-xl">Update and personalize your account settings while keeping track of your activity and usage history.</p>
+            <h1 className="font-headline text-xl md:text-5xl font-extrabold tracking-tight text-primary mb-3">Account Settings</h1>
+            <p className="text-on-surface-variant font-body max-w-xl">Update your account settings while keeping track of your activity and usage history.</p>
           </div>
           <button
             onClick={handleLogout}
-            className="md:hidden flex items-center gap-2 px-4 py-2 bg-error/10 text-error rounded-sm font-headline font-bold text-[10px] uppercase tracking-widest border-none cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-error/10 text-error rounded-sm font-headline font-bold text-[10px] uppercase tracking-widest border-none cursor-pointer"
           >
             <LogOut size={14} /> Logout
           </button>
@@ -55,7 +54,7 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Personal Info */}
-          <section className="bg-surface-container-low rounded-xl p-8 space-y-6 relative overflow-hidden ">
+          <section className="bg-surface-container-low rounded-xl p-8 md:p-8 space-y-6 relative overflow-hidden ">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#660000]"></div>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Personal Information</h2>
@@ -143,7 +142,7 @@ export default function Profile() {
 
           {showPasswordModal && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+              <div className="bg-white rounded-xl p-4 md:p-6 w-full max-w-md space-y-4">
 
                 <h3 className="text-lg font-bold text-[#330000]">Change Password</h3>
 
@@ -197,7 +196,7 @@ export default function Profile() {
           )}
 
           {/* Saved Locations */}
-          <section className="bg-surface-container-low rounded-xl p-8 space-y-6">
+          <section className="bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Saved Locations</h2>
               <PlusCircle size={24} className="text-primary-container cursor-pointer" />
@@ -222,20 +221,24 @@ export default function Profile() {
           </section>
 
           {/* Parking History */}
-          <section className="lg:col-span-2 bg-surface-container-low rounded-xl p-8 space-y-6">
+          <section className="lg:col-span-2 bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Parking History</h2>
-              <button className="px-6 py-2 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary-container transition-all">View All Activity</button>
+              <Link 
+              to="/history"
+              className="px-6 py-2 bg-[#660000] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary-container transition-all"
+              >
+              View All History</Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { name: 'Central Plaza Valet', time: '3 Hours 15 Minutes', date: 'May 12, 2024', price: '$45.00' },
-                { name: 'The Glass House', time: 'Overnight Stay', date: 'May 10, 2024', price: '$120.00' },
-                { name: 'South Wing Bay', time: '1 Hour 40 Minutes', date: 'May 08, 2024', price: '$22.00' },
+                { name: 'Mucipal Hall', time: '3 Hours 15 Minutes', date: 'April 17, 2026', price: '₱45.00' },
+                { name: 'The White House', time: 'Overnight Stay', date: 'April 14, 2026', price: '₱1000.00' },
+                { name: 'Robinson', time: '1 Hour 40 Minutes', date: 'April 10, 2026', price: '₱100.00' },
               ].map((item) => (
                 <div key={item.name} className="bg-surface p-6 rounded-lg space-y-4">
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-bold uppercase tracking-widest py-1 px-2 bg-secondary-container text-on-secondary-container rounded-full">Completed</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest py-1 px-2 bg-error/10 text-error rounded-full">Completed</span>
                     <span className="text-xs text-on-surface-variant font-medium">{item.date}</span>
                   </div>
                   <div>
