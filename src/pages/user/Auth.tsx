@@ -329,10 +329,10 @@ export function SignUp() {
                 </Link>
               </div>
             </form>
-            <div className="mt-8">
+          </div>
+          <div className="mt-8">
               <Footer />
             </div>
-          </div>
         </div>
       </main>
 
