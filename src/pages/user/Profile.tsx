@@ -53,7 +53,7 @@ export default function Profile() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Personal Info */}
+        
           <section className="bg-surface-container-low rounded-xl p-8 md:p-8 space-y-6 relative overflow-hidden ">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#660000]"></div>
             <div className="flex items-center justify-between">
@@ -62,18 +62,15 @@ export default function Profile() {
               <div className="flex gap-3">
                 {isEditing ? (
                   <>
-                    {/* Cancel */}
                     <button
                       onClick={() => {
                         setIsEditing(false);
-                        // optional: reset data dito
                       }}
                       className="text-sm font-semibold text-gray-500 hover:underline"
                     >
                       Cancel
                     </button>
 
-                    {/* Save */}
                     <button
                       onClick={() => {
                         alert('Saved!');
@@ -146,14 +143,12 @@ export default function Profile() {
 
                 <h3 className="text-lg font-bold text-[#330000]">Change Password</h3>
 
-                {/* Current Password */}
                 <input
                   type="password"
                   placeholder="Current Password"
                   className="w-full p-3 border rounded-md outline-none"
                 />
 
-                {/* New Password */}
                 <input
                   type="password"
                   placeholder="New Password"
@@ -163,15 +158,12 @@ export default function Profile() {
                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$"
                   />
               
-
-                {/* Confirm Password */}
                 <input
                   type="password"
                   placeholder="Re-type New Password"
                   className="w-full p-3 border rounded-md outline-none"
                 />
 
-                {/* Buttons */}
                 <div className="flex justify-end gap-3 pt-2">
                   <button
                     onClick={() => setShowPasswordModal(false)}
@@ -195,7 +187,6 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Saved Locations */}
           <section className="bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Saved Locations</h2>
@@ -220,7 +211,6 @@ export default function Profile() {
             </div>
           </section>
 
-          {/* Parking History */}
           <section className="lg:col-span-2 bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Parking History</h2>
