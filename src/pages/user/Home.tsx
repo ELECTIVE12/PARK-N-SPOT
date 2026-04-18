@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
-  MapPin,
   ArrowRight,
   TrendingUp,
-  Car,
   AlertTriangle,
   BarChart2,
   ShieldCheck,
@@ -16,31 +14,26 @@ export default function Home() {
 
   const isMobile = window.innerWidth < 768;
 
-  const [showReport, setShowReport] = useState(false);
-  const [reportText, setReportText] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
   const totalParking = 200;
+
   const [occupied, setOccupied] = useState(120);
   const available = totalParking - occupied;
 
-  const handleSubmitReport = () => {
-    if (!reportText.trim()) {
-      setError("Please enter a parking location.");
-      return;
-    }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOccupied(prev => {
+        const change = Math.random() > 0.5 ? 1 : -1;
+        let next = prev + change;
 
-    setError("");
-    console.log("Parking Report:", reportText);
+        if (next < 0) next = 0;
+        if (next > totalParking) next = totalParking;
 
-    setSubmitted(true);
+        return next;
+      });
+    }, 3000);
 
-    setTimeout(() => {
-      setSubmitted(false);
-      setShowReport(false);
-      setReportText("");
-    }, 2000);
-  };
+    return () => clearInterval(interval);
+  }, []);
 
   return (
 
@@ -51,6 +44,7 @@ export default function Home() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
           <section className="xl:col-span-8 space-y-6 sm:space-y-8">
             <div className="relative rounded-2xl overflow-hidden">
+
               <div
                 className="absolute inset-0"
                 style={{
@@ -67,7 +61,6 @@ export default function Home() {
 
               <div className="relative z-10 p-6 sm:p-8 lg:p-10">
 
-                {/* HEADER */}
                 <header className="mb-10 sm:mb-12 lg:mb-16">
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -85,7 +78,8 @@ export default function Home() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl relative overflow-hidden min-h-[220px] flex flex-col justify-between text-white">
+
+                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between text-white">
 
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold mb-2">
@@ -103,35 +97,44 @@ export default function Home() {
                         Open Map <ArrowRight size={14} />
                       </Link>
                     </div>
+
                   </div>
 
                 </div>
               </div>
             </div>
+            <div className="bg-surface-container-low p-6 sm:p-8 lg:p-10 rounded-2xl border">
 
-            <div className="bg-surface-container-low p-6 sm:p-8 lg:p-10 rounded-2xl border flex flex-col justify-between min-h-[220px]">
+              <h3 className="text-lg font-bold uppercase mb-6">
+                Smart Parking Insights
+              </h3>
 
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-on-surface">
-                    Report Available Spot
-                  </h3>
-                  <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
-                    Singapore Community System
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                <div className="p-4 bg-white rounded-xl">
+                  <p className="font-bold text-sm">Hotspots</p>
+                  <p className="text-xs text-gray-500">
+                    Orchard • Marina Bay • Bugis
                   </p>
                 </div>
 
-                <Car className="text-[#660000]" />
+                <div className="p-4 bg-white rounded-xl">
+                  <p className="font-bold text-sm">Best Time</p>
+                  <p className="text-xs text-gray-500">
+                    10 AM – 12 PM
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white rounded-xl">
+                  <p className="font-bold text-sm">Tip</p>
+                  <p className="text-xs text-gray-500">
+                    Avoid 6–8 PM rush hour
+                  </p>
+                </div>
+
               </div>
 
-              <button
-                onClick={() => setShowReport(true)}
-                className="mt-6 sm:mt-8 w-full py-2 sm:py-3 bg-[#660000] text-white text-xs font-bold uppercase tracking-widest rounded-md hover:bg-[#7a0000] transition-all"
-              >
-                Submit Report
-              </button>
             </div>
-
             <div className="bg-surface-container-low rounded-2xl p-6 sm:p-8 lg:p-10 border">
 
               <div className="flex justify-between items-center mb-6">
@@ -142,6 +145,7 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-3 text-center">
+
                 <div>
                   <p className="text-2xl font-black">{available}</p>
                   <p className="text-xs uppercase">Available</p>
@@ -156,15 +160,16 @@ export default function Home() {
                   <p className="text-2xl font-black text-[#660000]">7 PM</p>
                   <p className="text-xs uppercase">Peak</p>
                 </div>
+
               </div>
 
               <div className="mt-6 h-2 bg-gray-300 rounded-full overflow-hidden">
                 <motion.div
-                  initial={{ width: 0 }}
                   animate={{ width: `${(occupied / totalParking) * 100}%` }}
                   className="h-full bg-[#660000]"
                 />
               </div>
+
             </div>
 
           </section>
@@ -197,55 +202,9 @@ export default function Home() {
             </div>
 
           </aside>
+
         </div>
       </main>
-
-      {showReport && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-
-          <div className="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
-
-            <h2 className="text-lg font-bold">Report Parking Spot</h2>
-
-            <textarea
-              value={reportText}
-              onChange={(e) => {
-                setReportText(e.target.value);
-                setError("");
-              }}
-              placeholder="e.g. Marina Bay Sands Level 2..."
-              className="w-full border rounded-md p-3 h-24 text-sm"
-            />
-
-            {error && <p className="text-red-500 text-sm font-semibold">{error}</p>}
-
-            {submitted && (
-              <p className="text-green-600 text-sm font-semibold">
-                Report submitted successfully ✔
-              </p>
-            )}
-
-            <div className="flex justify-end gap-3">
-
-              <button
-                onClick={() => setShowReport(false)}
-                className="px-4 py-2 text-sm border rounded-md"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSubmitReport}
-                className="px-4 py-2 text-sm bg-[#660000] text-white rounded-md hover:bg-[#7a0000]"
-              >
-                Submit
-              </button>
-
-            </div>
-
-          </div>
-        </div>
-      )}
 
       <style>{`
         @keyframes bgMove {
