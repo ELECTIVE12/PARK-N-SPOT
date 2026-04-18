@@ -8,7 +8,9 @@ import profile from "./images/profile.jpg";
 export function TopNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const [open, setOpen] = React.useState(false);
+  const [hasUnread, setHasUnread] = React.useState(true);
+
   const navItems = [
     { name: 'Home', path: '/home' },
     { name: 'Map', path: '/explore' },
@@ -26,7 +28,7 @@ export function TopNav() {
     <nav className="fixed top-0 w-full z-50 glass-nav flex justify-between items-center px-8 h-20">
       <div className="flex items-center gap-8">
         <Link to="/home" className="text-xl font-headline font-extrabold  ml-8 tracking-tighter text-[#330000]">
-          Park 'N Spot
+          Park ‘n Spot
         </Link>
         <div className="hidden md:flex gap-8">
           {navItems.map((item) => (
@@ -35,8 +37,8 @@ export function TopNav() {
               to={item.path}
               className={cn(
                 "text-sm font-headline font-bold tracking-tight transition-colors duration-300 uppercase tracking-widest",
-                location.pathname === item.path 
-                  ? "text-[#330000] border-b-2 border-[#330000]" 
+                location.pathname === item.path
+                  ? "text-[#330000] border-b-2 border-[#330000]"
                   : "text-on-surface-variant hover:text-primary-container"
               )}
             >
@@ -45,14 +47,40 @@ export function TopNav() {
           ))}
         </div>
       </div>
-      
-      <div className="flex items-center gap-4">
-        <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
+
+      <div className="relative flex items-center gap-4">
+        <button
+          onClick={() => setOpen(!open)}
+          className=" relative p-2 text-on-surface-variant hover:text-primary transition-colors">
           <Bell size={20} />
+          {hasUnread && (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          )}
         </button>
+
+
+        {open && (
+          <div className="absolute right-0 top-12 w-64 bg-white shadow-md rounded-md p-3">
+            <p className="text-sm text-[#330000] font-semibold mb-2">Notifications</p>
+            <div className="text-sm border-b pb-2 mb-2">
+              New update available
+            </div>
+            <div className="text-sm border-b pb-2 mb-2">
+              Parking data updated
+            </div>
+            <div
+              onClick={() => {
+                setHasUnread(false);
+                setOpen(false);
+              }}
+              className="text-sm text-[#330000] text-center cursor-pointer">
+              Mark all as read
+            </div>
+          </div>
+        )}
         <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20">
-          <img 
-            src={profile} 
+          <img
+            src={profile}
             alt="profile picture"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -65,12 +93,13 @@ export function TopNav() {
 
 export function BottomNav() {
   const location = useLocation();
-  
+
   const items = [
+    { name: 'Home', path: '/home', icon: Home },
     { name: 'Explore', path: '/explore', icon: MapIcon },
     { name: 'History', path: '/history', icon: History },
-    { name: 'Wallet', path: '/wallet', icon: Wallet },
     { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Report', path: '/report', icon: FileText },
   ];
 
   return (
@@ -79,7 +108,7 @@ export function BottomNav() {
         const Icon = item.icon;
         const isActive = location.pathname === item.path;
         return (
-          <Link 
+          <Link
             key={item.path}
             to={item.path}
             className={cn(
@@ -100,7 +129,7 @@ export function Footer() {
   return (
     <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6">
-       <header className="flex items-center gap-3 mb-4 ml-15">
+        <header className="flex items-center gap-3 mb-4 ml-15">
           <h1 className="font-headline font-black text-2xl tracking-tighter text-primary text-[#330000]">Park ‘n Spot</h1>
         </header>
         <p className="text-on-surface-variant font-bold uppercase text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
