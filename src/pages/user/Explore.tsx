@@ -20,30 +20,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+const createIcon = (color: string) =>
+  new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
+
 export default function Explore() {
 
   const navigate = useNavigate();
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const isTablet = typeof window !== "undefined" && window.innerWidth < 1024;
-
-  const createIcon = (color: string) =>
-    new L.Icon({
-      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
-      shadowUrl: markerShadow,
-
-      iconSize: isMobile
-        ? [18, 30]
-        : isTablet
-        ? [22, 36]
-        : [25, 41],
-
-      iconAnchor: isMobile
-        ? [9, 30]
-        : isTablet
-        ? [11, 36]
-        : [12, 41],
-    });
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -56,7 +44,7 @@ export default function Explore() {
             className="absolute inset-0 will-change-transform"
             style={{
               backgroundImage: `url(${findparkgo})`,
-              backgroundSize: 'cover',
+              backgroundSize: '120%',
               backgroundPosition: 'center',
               animation: isMobile
                 ? 'bgMoveMobile 25s ease-in-out infinite alternate'
@@ -114,20 +102,29 @@ export default function Explore() {
               icon={createIcon("green")}
               eventHandlers={{ click: () => navigate('/facility/1') }}
             >
-              <Tooltip direction="top" offset={isMobile ? [0, -8] : [0, -10]} opacity={1}>
-                <div className="w-52 sm:w-60 md:w-64 space-y-2">
+              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 space-y-2">
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
                     <span className="text-[#660000] font-bold">Orchard Central</span>
                   </div>
+
+                  <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
+                    <span>🚗 Status</span>
+                    <span>Available</span>
+                  </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📏 Distance</span>
                     <span className="text-[#660000] font-bold">0.4 km</span>
                   </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>🅿️ Slots</span>
                     <span className="text-[#660000] font-bold">82</span>
                   </div>
+
                 </div>
               </Tooltip>
             </Marker>
@@ -137,20 +134,29 @@ export default function Explore() {
               icon={createIcon("red")}
               eventHandlers={{ click: () => navigate('/facility/2') }}
             >
-              <Tooltip direction="top" offset={isMobile ? [0, -8] : [0, -10]} opacity={1}>
-                <div className="w-52 sm:w-60 md:w-64 space-y-2">
+              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 space-y-2">
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
                     <span className="text-[#660000] font-bold">Marina Bay</span>
                   </div>
+
+                  <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
+                    <span>🚗 Status</span>
+                    <span>Full</span>
+                  </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📏 Distance</span>
                     <span className="text-[#660000] font-bold">1.2 km</span>
                   </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>🅿️ Slots</span>
                     <span className="text-[#660000] font-bold">0</span>
                   </div>
+
                 </div>
               </Tooltip>
             </Marker>
@@ -160,20 +166,29 @@ export default function Explore() {
               icon={createIcon("gold")}
               eventHandlers={{ click: () => navigate('/facility/3') }}
             >
-              <Tooltip direction="top" offset={isMobile ? [0, -8] : [0, -10]} opacity={1}>
-                <div className="w-52 sm:w-60 md:w-64 space-y-2">
+              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 space-y-2">
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
                     <span className="text-[#660000] font-bold">Bugis Junction</span>
                   </div>
+
+                  <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
+                    <span>🚗 Status</span>
+                    <span>Limited</span>
+                  </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📏 Distance</span>
                     <span className="text-[#660000] font-bold">0.8 km</span>
                   </div>
+
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>🅿️ Slots</span>
                     <span className="text-[#660000] font-bold">12</span>
                   </div>
+
                 </div>
               </Tooltip>
             </Marker>
@@ -216,14 +231,15 @@ export default function Explore() {
 
       <style>{`
         @keyframes bgMove {
-          0% { transform: scale(1.05); }
-          100% { transform: scale(1.15); }
+          0% { transform: scale(1) translate(0px, 0px); }
+          50% { transform: scale(1.08) translate(-20px, -10px); }
+          100% { transform: scale(1) translate(0px, 0px); }
         }
 
         @keyframes bgMoveMobile {
-          0% { background-position: center; }
-          50% { background-position: 60% 40%; }
-          100% { background-position: center; }
+          0% { transform: scale(1) translate(0px, 0px); }
+          50% { transform: scale(1.12) translate(-10px, -5px); }
+          100% { transform: scale(1) translate(0px, 0px); }
         }
       `}</style>
 
