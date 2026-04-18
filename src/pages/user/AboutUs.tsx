@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Building, Sparkles, LayoutGrid, ExternalLink, Zap, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Mail } from "lucide-react";
-import { UserFooter } from '../../components/userFooter';
+import { Footer } from '../../components/Footer';
 import parking from "../../components/images/parking.jpg";
 import firstabt from "../../components/images/firstabt.jpg";
 import secondabt from "../../components/images/secondabt.jpg";
@@ -132,7 +132,7 @@ export default function AboutUs() {
       </section>
 
 
-      <section className="py-32 bg-surface-container-low px-8 md:px-20">
+      <section className="py-32 bg-surface-container-low px-8 pb-5 md:px-15">
         <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
             <span className="text-secondary font-headline tracking-widest uppercase text-xs mb-4 block font-bold">The Core Team</span>
@@ -205,8 +205,9 @@ export default function AboutUs() {
             </div>
           ))}
         </div>
+        <Footer />
       </section>
-      <UserFooter />
+
     </div>
   );
 
