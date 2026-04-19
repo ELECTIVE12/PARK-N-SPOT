@@ -1,141 +1,276 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MapPin, Navigation, Info, CheckCircle2, Clock, Leaf } from 'lucide-react';
+import {
+  MapPin,
+  Navigation,
+  CheckCircle2,
+  Clock,
+  Leaf,
+  Shield,
+  Car
+} from 'lucide-react';
+
+import findparkgo from "../../components/images/findparkgo.png";
 
 export default function FacilityDetails() {
+
+  const { id } = useParams();
+
+  const [saved, setSaved] = useState(false);
+
+  const facilityData: any = {
+    "1": {
+      name: "West Wing Pavilion",
+      location: "Marina Bay",
+      slots: "84 / 120"
+    },
+    "2": {
+      name: "Orchard Central Parking",
+      location: "Orchard Road",
+      slots: "Full"
+    },
+    "3": {
+      name: "Bugis Smart Park",
+      location: "Bugis District",
+      slots: "32 / 120"
+    },
+    "4": {
+      name: "Downtown Core Garage",
+      location: "CBD Singapore",
+      slots: "67 / 120"
+    }
+  };
+
+  const current = facilityData[id as string] || facilityData["1"];
+
   return (
-    <div className="pt-32 pb-24 px-8 max-w-7xl mx-auto min-h-screen">
-      {/* Header Section */}
-      <div className="flex flex-col lg:flex-row justify-between items-end gap-8 mb-12">
-        <div className="flex-1">
-          <nav className="flex mb-4 text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant">
-            <span>Parking Facilities</span>
-            <span className="mx-2">/</span>
-            <span className="text-primary font-bold">The Sovereign West Wing</span>
-          </nav>
-          <h1 className="text-5xl md:text-6xl font-headline font-black tracking-tight text-on-surface mb-4">West Wing Pavilion</h1>
-          <p className="text-on-surface-variant max-w-xl text-lg leading-relaxed">
-            Premium climate-controlled parking featuring 24/7 valet assistance and oversized bays for executive vehicles.
-          </p>
+    <div className="pt-24 pb-20 px-4 sm:px-6 md:px-12 lg:px-24 max-w-[1800px] mx-auto min-h-screen bg-[#f9fafb]">
+
+      <div className="mb-12">
+
+        <div className="relative w-full h-[420px] rounded-2xl overflow-hidden shadow-xl">
+
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${findparkgo})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              animation: 'bgMove 20s ease-in-out infinite alternate',
+            }}
+          />
+
+          <div className="absolute inset-0 bg-black/60" />
+
+          <div className="relative z-10 h-full flex items-center px-6 sm:px-10 text-white">
+
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="max-w-3xl"
+            >
+
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/80">
+                Park ‘n Spot Facility Details
+              </span>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight mt-2">
+                WHERE EVERY SPACE BECOMES A MOMENT OF CONVENIENCE
+              </h1>
+
+              <p className="text-white/70 mt-4 text-sm sm:text-base max-w-xl">
+                View real-time parking insights, availability, and smart infrastructure details across the city network.
+              </p>
+
+            </motion.div>
+
+          </div>
+
         </div>
-        <div className="flex gap-4 w-full lg:w-auto">
-          <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-sm font-bold tracking-tight hover:opacity-90 transition-all">
-            <Navigation size={20} />
+
+      </div>
+
+      <div className="mb-10">
+
+        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-3">
+          Parking Facilities / <span className="text-[#660000]">Facility {id}</span>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-tight">
+          {current.name}
+        </h1>
+
+        <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl">
+          Premium smart parking infrastructure with real-time slot tracking and secure monitoring systems.
+        </p>
+
+        <div className="flex gap-3 mt-6">
+
+          <button
+            onClick={() => alert(`Navigating to ${current.location}`)}
+            className="bg-[#660000] text-white px-5 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest hover:bg-[#7a0000] transition flex items-center gap-2"
+          >
+            <Navigation size={14} />
             Navigate
           </button>
-          <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 border border-outline px-8 py-4 rounded-sm font-bold tracking-tight hover:bg-surface-container-low transition-all">
-            <span className="material-symbols-outlined">favorite</span>
-            Save to Favorites
+
+          <button
+            onClick={() => setSaved(!saved)}
+            className={`px-5 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest transition border 
+              ${saved
+                ? "bg-[#660000] text-white border-[#660000]"
+                : "border-gray-300 hover:bg-gray-100"
+              }`}
+          >
+            {saved ? "Saved ✓" : "★ Save"}
           </button>
+
         </div>
+
       </div>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Real-time Status */}
-        <div className="md:col-span-4 bg-surface-container-low p-8 relative overflow-hidden flex flex-col justify-between h-[400px]">
-          <div className="absolute top-0 left-0 w-2 h-full bg-secondary"></div>
-          <div>
-            <h3 className="text-sm font-headline font-bold uppercase tracking-widest text-on-surface-variant mb-12">Real-time Status</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-8xl font-black text-on-surface tracking-tighter">84</span>
-              <span className="text-2xl font-bold text-on-surface-variant">/ 120</span>
-            </div>
-            <p className="text-lg font-medium text-secondary mt-2">Available Slots Now</p>
-          </div>
-          <div className="pt-8 border-t border-outline-variant/30">
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Status</p>
-                <p className="font-bold text-on-surface">Optimal Flow</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                <CheckCircle2 size={24} />
-              </div>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+
+        <div className="bg-white border rounded-xl p-5 hover:shadow-md transition">
+          <Shield className="text-[#660000] mb-3" />
+          <h3 className="font-bold">Security Network</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            24/7 CCTV coverage across parking zones.
+          </p>
         </div>
 
-        {/* Availability Trend */}
-        <div className="md:col-span-8 bg-surface-container-highest p-8 flex flex-col h-[400px]">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h3 className="text-xl font-bold text-on-surface">Estimated Availability Trend</h3>
-              <p className="text-on-surface-variant text-sm">Predicted slot occupancy based on architectural data modeling</p>
-            </div>
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-surface-container-lowest text-[10px] font-bold uppercase tracking-tighter rounded-full border border-outline/10">Today</span>
-              <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Weekly</span>
-            </div>
+        <div className="bg-white border rounded-xl p-5 hover:shadow-md transition">
+          <Car className="text-[#660000] mb-3" />
+          <h3 className="font-bold">Smart Allocation</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Real-time parking distribution system.
+          </p>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 hover:shadow-md transition">
+          <Leaf className="text-green-600 mb-3" />
+          <h3 className="font-bold">Eco Efficiency</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Reduced idle time and emissions.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <div className="lg:col-span-4 bg-white border rounded-2xl p-6 relative overflow-hidden">
+
+          <div className="absolute left-0 top-0 w-1 h-full bg-[#660000]" />
+
+          <h3 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-8">
+            Live Availability
+          </h3>
+
+          <div className="text-5xl font-black text-gray-900">
+            {current.slots}
           </div>
-          
-          <div className="flex-1 flex items-end gap-1 px-4">
-            {[20, 35, 60, 85, 95, 80, 50, 40, 65, 75, 45, 25].map((height, i) => (
-              <div 
+
+          <p className="text-[#660000] font-semibold mt-2 text-sm">
+            Available Slots
+          </p>
+
+          <div className="flex items-center gap-2 mt-6 text-sm font-semibold">
+            <CheckCircle2 className="text-[#660000]" size={18} />
+            Operational
+          </div>
+
+        </div>
+
+        <div className="lg:col-span-8 bg-white border rounded-2xl p-6">
+
+          <h3 className="font-bold text-lg mb-4">
+            Parking Usage Overview
+          </h3>
+
+          <div className="flex items-end gap-1 h-[260px]">
+
+            {[20, 35, 60, 85, 95, 80, 50, 40, 65, 75, 45, 25].map((h, i) => (
+              <div
                 key={i}
-                className="flex-1 bg-primary/10 rounded-t-sm hover:bg-primary transition-colors cursor-help group relative"
-                style={{ height: `${height}%` }}
-              >
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  {i + 6}:00 - {100 - height}%
-                </div>
-              </div>
+                className="flex-1 bg-[#660000]/10 hover:bg-[#660000] transition rounded-t-sm"
+                style={{ height: `${h}%` }}
+              />
             ))}
+
           </div>
-          <div className="flex justify-between mt-4 text-[10px] font-bold uppercase text-on-surface-variant/60 tracking-widest">
-            <span>06:00 AM</span>
-            <span>12:00 PM</span>
-            <span>06:00 PM</span>
-            <span>12:00 AM</span>
-          </div>
+
         </div>
 
-        {/* Peak Hours */}
-        <div className="md:col-span-5 bg-surface-container-high p-8">
-          <h3 className="text-xl font-bold text-on-surface mb-6">Peak Operational Hours</h3>
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0 bg-primary-container flex items-center justify-center text-white">
-                <Clock size={24} />
-              </div>
+        <div className="lg:col-span-5 bg-white border rounded-2xl p-6">
+
+          <h3 className="font-bold mb-5">Peak Hours</h3>
+
+          <div className="space-y-5">
+
+            <div className="flex gap-3">
+              <Clock className="text-[#660000]" />
               <div>
-                <p className="font-bold text-on-surface">Morning Rush</p>
-                <p className="text-sm text-on-surface-variant italic">08:30 AM — 10:15 AM</p>
+                <p className="font-bold">Morning</p>
+                <p className="text-sm text-gray-500">Higher parking demand</p>
               </div>
-              <div className="ml-auto text-error font-bold text-xs uppercase tracking-tighter">High Density</div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0 bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                <Leaf size={24} />
-              </div>
+
+            <div className="flex gap-3">
+              <Leaf className="text-green-600" />
               <div>
-                <p className="font-bold text-on-surface">Serene Window</p>
-                <p className="text-sm text-on-surface-variant italic">02:00 PM — 04:30 PM</p>
+                <p className="font-bold">Off Peak</p>
+                <p className="text-sm text-gray-500">Better availability</p>
               </div>
-              <div className="ml-auto text-secondary font-bold text-xs uppercase tracking-tighter">Recommended</div>
             </div>
+
           </div>
+
         </div>
 
-        {/* Location Snapshot */}
-        <div className="md:col-span-7 bg-surface-container-lowest p-2 shadow-sm flex items-stretch">
-          <div className="w-full h-full min-h-[250px] relative overflow-hidden group">
-            <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtFA7rqFtDCwrlx3MGj2LCdeEiqWWxpEtk5HigJoW1Pls-ANemEtAFSus-1EoFmivD2NayZy5Q2Mkf9p9AABO1CtZl-EPILpF7wKQ3JJXsPAS8zVtzWOQDei0N0hhRoTC2cb99csRSmsGwoMbmkJQxl8hnqjdZkAD7GsKROxlhTR9JjX_gzh0evm-ItmR1Qj0Xn2vSlSNMHecqCbOT7p3yxPxWJrbuugihTJ2QKO-m5wmYKhaHPXARX_L2KeVA7tNdv9dZ7JbTa7NY" 
-              alt="Map"
-              className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
-            <div className="absolute bottom-6 left-6">
-              <div className="bg-primary text-on-primary px-4 py-2 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <MapPin size={14} />
-                Sector 4, Sovereign Estate
-              </div>
-            </div>
+        <div className="lg:col-span-7 bg-white border rounded-2xl overflow-hidden">
+
+          <img
+            src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200"
+            className="w-full h-[260px] object-cover"
+            alt="facility"
+          />
+
+          <div className="bg-[#660000] text-white p-4 flex items-center gap-2 text-sm">
+            <MapPin size={14} />
+            {current.location} • Facility {id}
           </div>
+
         </div>
+
       </div>
+
+      <div className="mt-12">
+
+        <h2 className="text-lg font-bold mb-4">
+          Facility Visuals
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800" />
+          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1494526585095-c41746248156?w=800" />
+          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800" />
+          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=800" />
+
+        </div>
+
+      </div>
+
+      <style>{`
+        @keyframes bgMove {
+          0% { transform: scale(1.05); }
+          100% { transform: scale(1.15); }
+        }
+      `}</style>
+
     </div>
   );
 }
