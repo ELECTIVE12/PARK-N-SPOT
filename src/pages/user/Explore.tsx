@@ -28,6 +28,11 @@ const createIcon = (color: string) =>
     iconAnchor: [12, 41],
   });
 
+const Map = MapContainer as any;
+const MapTile = TileLayer as any;
+const MapMarker = Marker as any;
+const MapTooltip = Tooltip as any;
+
 export default function Explore() {
 
   const navigate = useNavigate();
@@ -85,25 +90,25 @@ export default function Explore() {
 
         <div className="w-full h-[55vh] rounded-2xl overflow-hidden shadow-lg border">
 
-          <MapContainer
+          <Map
             center={[1.3521, 103.8198]}
             zoom={12}
             scrollWheelZoom={true}
             className="w-full h-full"
           >
 
-            <TileLayer
+            <MapTile
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            <Marker
+            <MapMarker
               position={[1.3521, 103.8198]}
               icon={createIcon("green")}
               eventHandlers={{ click: () => navigate('/facility/1') }}
             >
-              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                <div className="w-64 space-y-2">
+              <MapTooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 max-h-60 overflow-y-auto space-y-2 pr-1">
 
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
@@ -126,17 +131,16 @@ export default function Explore() {
                   </div>
 
                 </div>
-              </Tooltip>
-            </Marker>
+              </MapTooltip>
+            </MapMarker>
 
-            <Marker
+            <MapMarker
               position={[1.3600, 103.8200]}
               icon={createIcon("red")}
               eventHandlers={{ click: () => navigate('/facility/2') }}
             >
-              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                <div className="w-64 space-y-2">
-
+              <MapTooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 max-h-60 overflow-y-auto space-y-2 pr-1">
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
                     <span className="text-[#660000] font-bold">Marina Bay</span>
@@ -158,17 +162,16 @@ export default function Explore() {
                   </div>
 
                 </div>
-              </Tooltip>
-            </Marker>
+              </MapTooltip>
+            </MapMarker>
 
-            <Marker
+            <MapMarker
               position={[1.3400, 103.8300]}
               icon={createIcon("gold")}
               eventHandlers={{ click: () => navigate('/facility/3') }}
             >
-              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-                <div className="w-64 space-y-2">
-
+              <MapTooltip direction="top" offset={[0, -10]} opacity={1}>
+                <div className="w-64 max-h-60 overflow-y-auto space-y-2 pr-1">
                   <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                     <span>📍 Location</span>
                     <span className="text-[#660000] font-bold">Bugis Junction</span>
@@ -190,17 +193,17 @@ export default function Explore() {
                   </div>
 
                 </div>
-              </Tooltip>
-            </Marker>
+              </MapTooltip>
+            </MapMarker>
 
-          </MapContainer>
+          </Map>
 
         </div>
       </div>
 
       <div className="px-6 sm:px-8 lg:px-10 mt-6 mb-12">
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-center">
 
           <h3 className="text-sm font-bold uppercase tracking-widest text-[#660000] mb-6">
             Availability Status
@@ -208,17 +211,17 @@ export default function Explore() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-600"></div>
               <p className="font-bold text-sm">Available</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
               <p className="font-bold text-sm">Limited</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-600"></div>
               <p className="font-bold text-sm">Full</p>
             </div>
@@ -226,7 +229,6 @@ export default function Explore() {
           </div>
 
         </div>
-
       </div>
 
       <style>{`
@@ -240,6 +242,26 @@ export default function Explore() {
           0% { transform: scale(1) translate(0px, 0px); }
           50% { transform: scale(1.12) translate(-10px, -5px); }
           100% { transform: scale(1) translate(0px, 0px); }
+        }
+        .leaflet-tooltip {
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          padding: 10px !important;
+          max-width: 280px !important;
+          white-space: normal !important;
+          background: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid #ddd !important;
+          border-radius: 10px !important;
+          box-shadow: 0 6px 18px rgba(0,0,0,0.15) !important;
+          color: #111 !important;
+        }
+
+        .leaflet-tooltip * {
+          font-size: inherit !important;
+        }
+
+        .leaflet-tooltip .w-64 {
+          width: 260px !important;
         }
       `}</style>
 
