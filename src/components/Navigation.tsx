@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Settings2, Home, History, FileText, User, Map as MapIcon, Wallet, LogOut, LayoutGrid } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import profile from "./images/profile.jpg";
+import { useEffect, useState } from "react";
 
 
 export function TopNav() {
@@ -91,40 +92,6 @@ export function TopNav() {
   );
 }
 
-export function BottomNav() {
-  const location = useLocation();
-
-  const items = [
-    { name: 'Home', path: '/home', icon: Home },
-    { name: 'Explore', path: '/explore', icon: MapIcon },
-    { name: 'History', path: '/history', icon: History },
-    { name: 'Profile', path: '/profile', icon: User },
-    { name: 'Report', path: '/report', icon: FileText },
-  ];
-
-  return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full h-20 glass-nav flex justify-around items-center px-6 pb-safe z-50 rounded-t-xl shadow-2xl">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.path;
-        return (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={cn(
-              "flex flex-col items-center justify-center transition-all",
-              isActive ? "text-[#330000] scale-110" : "text-on-surface-variant opacity-60"
-            )}
-          >
-            <Icon size={24} fill={isActive ? "currentColor" : "none"} />
-            <span className="text-[11px] font-semibold tracking-wide mt-1">{item.name}</span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
 export function Footer() {
   return (
     <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
@@ -137,3 +104,60 @@ export function Footer() {
     </footer>
   );
 }
+
+export function BottomNav() {
+  const location = useLocation();
+  const [hideNav, setHideNav] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 50;
+
+      setHideNav(atBottom);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+
+  const items = [
+    { name: 'Home', path: '/home', icon: Home },
+    { name: 'Explore', path: '/explore', icon: MapIcon },
+    { name: 'History', path: '/history', icon: History },
+    { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Report', path: '/report', icon: FileText },
+  ];
+
+ return (
+    <nav
+      className={cn(
+        "md:hidden fixed bottom-0 left-0 w-full h-20 glass-nav flex justify-around items-center px-6 pb-safe z-50 rounded-t-xl shadow-2xl transition-all duration-300",
+        hideNav ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
+      )}
+    >
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = location.pathname === item.path;
+
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={cn(
+              "flex flex-col items-center justify-center transition-all",
+              isActive ? "text-[#330000] scale-110" : "text-on-surface-variant opacity-60"
+            )}
+          >
+            <Icon size={24} fill={isActive ? "currentColor" : "none"} />
+            <span className="text-[11px] font-semibold tracking-wide mt-1">
+              {item.name}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
