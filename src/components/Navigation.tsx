@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Settings2, Home, History, FileText, User, Map as MapIcon, Wallet, LogOut, LayoutGrid } from 'lucide-react';
+import { Bell, Home, History, FileText, User, Map as MapIcon,} from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import profile from "./images/profile.jpg";
 import { useEffect, useState } from "react";
@@ -96,10 +96,7 @@ export function Footer() {
   return (
     <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6">
-        <header className="flex items-center gap-3 mb-4 ml-15">
-          <h1 className="font-headline font-black text-2xl tracking-tighter text-primary text-[#330000]">Park ‘n Spot</h1>
-        </header>
-        <p className="text-on-surface-variant font-bold uppercase text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
+        <p className="text-on-surface-variant  text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
       </div>
     </footer>
   );

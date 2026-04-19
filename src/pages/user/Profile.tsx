@@ -222,9 +222,9 @@ export default function Profile() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { name: 'Mucipal Hall', time: '3 Hours 15 Minutes', date: 'April 17, 2026', price: '₱45.00' },
-                { name: 'The White House', time: 'Overnight Stay', date: 'April 14, 2026', price: '₱1000.00' },
-                { name: 'Robinson', time: '1 Hour 40 Minutes', date: 'April 10, 2026', price: '₱100.00' },
+                { name: 'Mucipal Hall', time: '3 Hours 15 Minutes', date: 'April 17, 2026' },
+                { name: 'The White House', time: 'Overnight Stay', date: 'April 14, 2026' },
+                { name: 'Robinson', time: '1 Hour 40 Minutes', date: 'April 10, 2026'},
               ].map((item) => (
                 <div key={item.name} className="bg-surface p-6 rounded-lg space-y-4">
                   <div className="flex justify-between items-start">
@@ -236,8 +236,6 @@ export default function Profile() {
                     <p className="text-xs text-on-surface-variant">{item.time}</p>
                   </div>
                   <div className="pt-4 border-t border-outline-variant/30 flex justify-between items-center">
-                    <span className="text-lg font-black text-on-surface">{item.price}</span>
-                    <ReceiptText size={18} className="text-on-surface-variant" />
                   </div>
                 </div>
               ))}

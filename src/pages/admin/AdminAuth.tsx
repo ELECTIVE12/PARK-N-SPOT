@@ -80,9 +80,9 @@ export function AdminLogin() {
           <div className="text-center mb-12">
             <div className="relative inline-block">
               <img src={Logo} alt="Logo" className="w-46 h-46 object-contain" />
-              <h1 className="text-5xl font-bold tracking-tight text-on-surface font-headline absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 whitespace-nowrap">Park 'n Spot</h1>
+              <h1 className="text-5xl font-bold tracking-tight text-on-surface font-headline mb-4 absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 whitespace-nowrap">Park ‘n Spot</h1>
             </div>
-            <p className="text-on-surface-variant font-medium tracking-tight font-body mt-3">Admin Access Portal</p>
+            <p className="text-on-surface-variant font-medium tracking-tight font-body mt-2">Admin Access Portal</p>
           </div>
           
           {/* Login Card */}
@@ -139,7 +139,7 @@ export function AdminLogin() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors bg-transparent border-none cursor-pointer"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
                   </button>
                 </div>
                 {errors.password && touched.password && (
