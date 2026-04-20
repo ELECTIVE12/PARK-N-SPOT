@@ -4,12 +4,15 @@ const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const connectDB = require('./config/db');
+const { createServer } = require('http');          // ← ADD
+const { initSocket, getIO } = require('./socket'); // ← ADD
 
 // Passport Google Strategy config
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/User');
 
 const app = express();
+const httpServer = createServer(app); // ← ADD
 connectDB();
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
@@ -25,15 +28,29 @@ passport.use(new GoogleStrategy({
   callbackURL: process.env.GOOGLE_CALLBACK_URL,
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    const email = profile.emails[0].value;
+
     let user = await User.findOne({ googleId: profile.id });
+
     if (!user) {
-      user = await User.create({
-        googleId: profile.id,
-        name: profile.displayName,
-        email: profile.emails[0].value,
-        avatar: profile.photos[0].value,
-      });
+      user = await User.findOne({ email });
+
+      if (user) {
+        user.googleId = profile.id;
+        user.avatar = profile.photos[0].value;
+        await user.save();
+      } else {
+        user = new User({
+          googleId: profile.id,
+          name: profile.displayName,
+          email: email,
+          avatar: profile.photos[0].value,
+          password: profile.id,
+        });
+        await user.save();
+      }
     }
+
     return done(null, user);
   } catch (err) {
     return done(err, null);
@@ -50,8 +67,12 @@ passport.deserializeUser(async (id, done) => {
 app.use('/auth', require('./routes/auth'));
 app.use('/auth/google', require('./routes/google'));
 app.use('/parking', require('./routes/parking'));
+app.use('/api/notifications', require('./routes/notificationRoutes')); // ← ADD
 
 app.get('/', (req, res) => res.send('Park n Spot API Running ✅'));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+httpServer.listen(PORT, () => {                    // ← CHANGE app.listen → httpServer.listen
+  console.log(`🚀 Server running on port ${PORT}`);
+  initSocket(httpServer);                          // ← ADD
+});
