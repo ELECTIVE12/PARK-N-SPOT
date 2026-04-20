@@ -6,7 +6,7 @@ import { Footer } from '../../components/Footer';
 import smart from "../../components/images/smart.png";
 import findparkgo from "../../components/images/findparkgo.png";
 
-const API_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // ─────────────────────────────────────────────
 // LOGIN
@@ -35,7 +35,11 @@ export function Login() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || 'Login failed. Please try again.');
+        if (data.googleAccount) {
+          setError('This account was created with Google. Please use "Log in with Google" below.');
+        } else {
+          setError(data.message || 'Login failed. Please try again.');
+        }
         return;
       }
       localStorage.setItem('token', data.token);
@@ -67,7 +71,7 @@ export function Login() {
       });
       setResetSent(true);
     } catch {
-      setResetSent(true); // still show success to avoid email enumeration
+      setResetSent(true);
     } finally {
       setResetLoading(false);
     }
@@ -160,8 +164,6 @@ export function Login() {
             </div>
 
             <div className="pt-2 sm:pt-3 flex flex-col gap-4 sm:gap-5 md:gap-6">
-
-              {/* ── Login Button ── */}
               <button
                 type="submit"
                 disabled={loading}
@@ -170,7 +172,6 @@ export function Login() {
                 {loading ? 'Logging in...' : 'LOG IN'}
               </button>
 
-              {/* ── Google Login Button ── */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
@@ -207,9 +208,7 @@ export function Login() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-sm w-full p-5 sm:p-6 md:p-8 space-y-4 shadow-xl mx-4">
             <h2 className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Forgot Password</h2>
-
             {resetSent ? (
-              // ── Success state ──
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
                   <Mail size={18} className="text-green-700 shrink-0" />
@@ -226,7 +225,6 @@ export function Login() {
                 </button>
               </div>
             ) : (
-              // ── Input state ──
               <>
                 <p className="text-xs text-on-surface-variant">Enter your email address to receive a password reset link.</p>
                 <input
@@ -276,7 +274,6 @@ export function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ── Real backend signup ──
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptedTerms) {
@@ -308,7 +305,6 @@ export function SignUp() {
     }
   };
 
-  // ── Google OAuth ──
   const handleGoogleSignUp = () => {
     window.location.href = `${API_URL}/auth/google`;
   };
@@ -316,8 +312,6 @@ export function SignUp() {
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-white min-h-screen flex flex-col">
       <main className="bg-surface-container-low w-full flex flex-col lg:flex-row">
-
-        {/* ── Left Visual ── */}
         <div className="lg:w-5/12 relative h-[35vh] sm:h-[40vh] md:h-[45vh] lg:h-screen lg:sticky lg:top-0 bg-primary overflow-hidden">
           <img
             className="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 mix-blend-luminosity"
@@ -337,29 +331,22 @@ export function SignUp() {
           </div>
         </div>
 
-        {/* ── Right Form ── */}
         <div className="lg:w-7/12 bg-surface-container-low p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 flex flex-col justify-center overflow-y-auto">
           <div className="max-w-md w-full mx-auto relative">
             <header className="flex items-center gap-3 mb-6 sm:mb-8">
               <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park 'n Spot</h1>
             </header>
-
             <div className="mb-4 sm:mb-5">
               <h2 className="font-headline text-3xl sm:text-4xl font-extrabold text-primary tracking-tight leading-tight">Sign Up</h2>
             </div>
-
-            {/* ── Error Banner ── */}
             {error && (
               <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
               </div>
             )}
-
             <form className="space-y-4 sm:space-y-5" onSubmit={handleRegister}>
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Full Name
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Full Name</label>
                 <input
                   className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                   placeholder="e.g Juan Dela Cruz"
@@ -369,11 +356,8 @@ export function SignUp() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
-
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Email
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Email</label>
                 <input
                   className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                   placeholder="juandelacruz@gmail.com"
@@ -383,11 +367,8 @@ export function SignUp() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  PASSWORD
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">PASSWORD</label>
                 <div className="relative">
                   <input
                     className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md pr-10"
@@ -408,7 +389,6 @@ export function SignUp() {
                   </button>
                 </div>
               </div>
-
               <div className="flex items-start space-x-2 sm:space-x-3 pt-1">
                 <input
                   type="checkbox"
@@ -418,18 +398,12 @@ export function SignUp() {
                 />
                 <div className="text-on-surface-variant font-body text-[10px] sm:text-[11px] md:text-[12px] tracking-wide">
                   I agree to the{' '}
-                  <button
-                    type="button"
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-primary font-headline font-semibold underline underline-offset-4 hover:opacity-80"
-                  >
+                  <button type="button" onClick={() => setShowTermsModal(true)} className="text-primary font-headline font-semibold underline underline-offset-4 hover:opacity-80">
                     Terms and Conditions
                   </button>.
                 </div>
               </div>
-
               <div className="pt-2 sm:pt-3 flex flex-col gap-3">
-                {/* ── Register Button ── */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -437,8 +411,6 @@ export function SignUp() {
                 >
                   {loading ? 'Creating Account...' : 'Register'}
                 </button>
-
-                {/* ── Google Sign Up Button ── */}
                 <button
                   type="button"
                   onClick={handleGoogleSignUp}
@@ -453,20 +425,13 @@ export function SignUp() {
                   SIGN UP WITH GOOGLE
                 </button>
               </div>
-
               <div className="text-center mt-4 sm:mt-6">
-                <span className="text-on-surface-variant font-body text-[11px] sm:text-[12px] tracking-wide">
-                  Already have an account?{' '}
-                </span>
-                <Link to="/login" className="text-primary font-bold text-[11px] sm:text-[12px] hover:underline decoration-secondary-container underline-offset-4 transition-all">
-                  LOGIN
-                </Link>
+                <span className="text-on-surface-variant font-body text-[11px] sm:text-[12px] tracking-wide">Already have an account? </span>
+                <Link to="/login" className="text-primary font-bold text-[11px] sm:text-[12px] hover:underline decoration-secondary-container underline-offset-4 transition-all">LOGIN</Link>
               </div>
             </form>
           </div>
-          <div className="mt-8">
-            <Footer />
-          </div>
+          <div className="mt-8"><Footer /></div>
         </div>
       </main>
 
@@ -495,20 +460,8 @@ export function SignUp() {
               <p><strong>10. Contact:</strong> park'ngo@gmail.com</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3">
-              <button
-                type="button"
-                onClick={() => setShowTermsModal(false)}
-                className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
-              >
-                Decline
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAcceptedTerms(true); setShowTermsModal(false); }}
-                className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md text-center"
-              >
-                Accept
-              </button>
+              <button type="button" onClick={() => setShowTermsModal(false)} className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition">Decline</button>
+              <button type="button" onClick={() => { setAcceptedTerms(true); setShowTermsModal(false); }} className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md text-center">Accept</button>
             </div>
           </div>
         </div>
@@ -531,10 +484,7 @@ export function Verify() {
       const token = localStorage.getItem('token');
       await fetch(`${API_URL}/auth/resend-verification`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
       setResendSent(true);
     } catch {
@@ -549,33 +499,23 @@ export function Verify() {
       <header className="flex items-center gap-2 sm:gap-3 pt-5 sm:pt-6 md:pt-8 px-5 sm:px-8 md:px-12 lg:px-16">
         <h1 className="font-headline font-black text-xl sm:text-2xl ml-8 tracking-tighter text-primary">Park 'n Spot</h1>
       </header>
-
       <main className="flex-grow flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-10">
         <div className="max-w-md w-full bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] p-5 sm:p-6 md:p-8 lg:p-10 relative overflow-hidden rounded-lg">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#660000]" />
           <div className="flex flex-col items-start gap-6 sm:gap-8">
-            <button
-              onClick={() => navigate('/signup')}
-              className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors duration-200 group border-none bg-transparent cursor-pointer"
-            >
+            <button onClick={() => navigate('/signup')} className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors duration-200 group border-none bg-transparent cursor-pointer">
               <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
               <span className="font-headline font-bold uppercase text-[9px] sm:text-[10px] tracking-widest">Back to Sign Up</span>
             </button>
-
             <div className="space-y-3 sm:space-y-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-surface-container-low flex items-center justify-center rounded-md">
                 <Mail size={24} className="sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
               </div>
               <div className="space-y-3 sm:space-y-4">
-                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">
-                  Verify your<br />parking profile.
-                </h1>
-                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">
-                  We've sent a secure confirmation link to your email. Click the link to activate your account.
-                </p>
+                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">Verify your<br />parking profile.</h1>
+                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">We've sent a secure confirmation link to your email. Click the link to activate your account.</p>
               </div>
             </div>
-
             <div className="w-full space-y-4">
               {resendSent ? (
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
@@ -584,27 +524,14 @@ export function Verify() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 sm:gap-3">
-                  <p className="text-on-surface-variant/70 text-xs sm:text-sm font-medium tracking-wide font-body">
-                    Didn't receive the email?
-                  </p>
-                  <button
-                    onClick={handleResend}
-                    disabled={resendLoading}
-                    className="text-primary font-headline font-bold flex items-center gap-2 hover:opacity-60 transition-opacity w-fit border-none bg-transparent cursor-pointer disabled:opacity-40"
-                  >
-                    <span className="tracking-tight uppercase text-[11px] sm:text-xs">
-                      {resendLoading ? 'Sending...' : 'Resend Link'}
-                    </span>
+                  <p className="text-on-surface-variant/70 text-xs sm:text-sm font-medium tracking-wide font-body">Didn't receive the email?</p>
+                  <button onClick={handleResend} disabled={resendLoading} className="text-primary font-headline font-bold flex items-center gap-2 hover:opacity-60 transition-opacity w-fit border-none bg-transparent cursor-pointer disabled:opacity-40">
+                    <span className="tracking-tight uppercase text-[11px] sm:text-xs">{resendLoading ? 'Sending...' : 'Resend Link'}</span>
                     <RefreshCw size={14} className={resendLoading ? 'animate-spin' : ''} />
                   </button>
                 </div>
               )}
-
-              {/* Skip verification for now during development */}
-              <button
-                onClick={() => navigate('/explore')}
-                className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant underline underline-offset-4 transition-colors font-body"
-              >
+              <button onClick={() => navigate('/explore')} className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant underline underline-offset-4 transition-colors font-body">
                 Skip for now (dev only)
               </button>
             </div>
@@ -617,7 +544,7 @@ export function Verify() {
 }
 
 // ─────────────────────────────────────────────
-// AUTH SUCCESS (Google OAuth callback handler)
+// AUTH SUCCESS
 // ─────────────────────────────────────────────
 export function AuthSuccess() {
   const navigate = useNavigate();
@@ -627,7 +554,6 @@ export function AuthSuccess() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const name = params.get('name');
-
     if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('userName', name ?? '');
@@ -647,9 +573,7 @@ export function AuthSuccess() {
       ) : (
         <>
           <div className="w-8 h-8 border-4 border-[#660000] border-t-transparent rounded-full animate-spin" />
-          <p className="font-headline font-bold uppercase tracking-widest text-sm text-primary animate-pulse">
-            Authenticating with Google...
-          </p>
+          <p className="font-headline font-bold uppercase tracking-widest text-sm text-primary animate-pulse">Authenticating with Google...</p>
         </>
       )}
     </div>
