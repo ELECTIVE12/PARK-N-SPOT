@@ -3,9 +3,11 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  username: { type: String, default: '' },      // ← ADDED
   email: { type: String, required: true, unique: true },
-  password: { type: String }, // optional — Google users won't have one
-  googleId: { type: String }, // for Google OAuth users
+  mobile: { type: String, default: '' },         // ← ADDED
+  password: { type: String },
+  googleId: { type: String },
   avatar: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
@@ -19,7 +21,7 @@ userSchema.pre('save', async function (next) {
 
 // Compare password method
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false; // Google users have no password
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
