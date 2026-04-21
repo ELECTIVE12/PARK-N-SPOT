@@ -4,15 +4,31 @@ import { Bell, Home, History, FileText, User, Map as MapIcon } from 'lucide-reac
 import { cn } from '@/src/lib/utils';
 import profile from "./images/profile.jpg";
 import { useEffect, useState } from "react";
-import { useNotifications } from '../../hooks/useNotifications'; // ← ADD
+import { useNotifications } from '../../hooks/useNotifications';
 
 export function TopNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
 
-  const token = localStorage.getItem('token');                          // ← ADD
-  const { notifications, unreadCount, markAllRead } = useNotifications(token); // ← ADD
+  // ✅ FIXED: checks both token and isLoggedIn, same as App.tsx
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token')
+  );
+
+  const token = localStorage.getItem('token');
+  const { notifications, unreadCount, markAllRead } = useNotifications(token);
+
+  useEffect(() => {
+    // ✅ FIXED: syncs both isLoggedIn and token on auth changes
+    const syncAuth = () => {
+      setIsLoggedIn(
+        localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token')
+      );
+    };
+    window.addEventListener('auth-change', syncAuth);
+    return () => window.removeEventListener('auth-change', syncAuth);
+  }, []);
 
   const navItems = [
     { name: 'Home', path: '/home' },
@@ -23,6 +39,7 @@ export function TopNav() {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('token');
     window.dispatchEvent(new Event('auth-change'));
     navigate('/');
   };
@@ -56,7 +73,7 @@ export function TopNav() {
           onClick={() => setOpen(!open)}
           className="relative p-2 text-on-surface-variant hover:text-primary transition-colors">
           <Bell size={20} />
-          {unreadCount > 0 && ( // ← CHANGE: was hasUnread
+          {unreadCount > 0 && (
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           )}
         </button>
@@ -65,10 +82,10 @@ export function TopNav() {
           <div className="absolute right-0 top-12 w-64 bg-white shadow-md rounded-md p-3">
             <p className="text-sm text-[#330000] font-semibold mb-2">Notifications</p>
 
-            {notifications.length === 0 ? ( // ← CHANGE: dynamic list
+            {notifications.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-2">No notifications</p>
             ) : (
-              notifications.slice(0, 5).map((n) => ( // ← CHANGE: map real notifications
+              notifications.slice(0, 5).map((n) => (
                 <div key={n._id} className={cn("text-sm border-b pb-2 mb-2", !n.isRead && "font-semibold")}>
                   <p>{n.title}</p>
                   <p className="text-xs text-gray-500">{n.message}</p>
@@ -77,7 +94,7 @@ export function TopNav() {
             )}
 
             <div
-              onClick={() => { // ← CHANGE: calls real API
+              onClick={() => {
                 markAllRead();
                 setOpen(false);
               }}
@@ -87,14 +104,18 @@ export function TopNav() {
           </div>
         )}
 
-        <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20">
+        {/* ✅ FIXED: now checks both isLoggedIn and token */}
+        <button
+          onClick={() => navigate(isLoggedIn ? '/profile' : '/login')}
+          className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20"
+        >
           <img
             src={profile}
             alt="profile picture"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-        </Link>
+        </button>
       </div>
     </nav>
   );
