@@ -20,8 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 interface CarparkLocation {
   lat: number;
   lng: number;
@@ -39,8 +37,6 @@ interface Carpark {
 }
 
 type MarkerColor = 'green' | 'gold' | 'red';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const createIcon = (color: MarkerColor) =>
   new L.Icon({
@@ -62,14 +58,10 @@ const getMarkerColor = (lots: number): MarkerColor => {
   return 'red';
 };
 
-// ─── Leaflet cast helpers (same pattern as your original) ─────────────────────
-
 const Map = MapContainer as any;
 const MapTile = TileLayer as any;
 const MapMarker = Marker as any;
 const MapTooltip = Tooltip as any;
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Explore() {
   const navigate = useNavigate();
@@ -84,7 +76,7 @@ export default function Explore() {
     const fetchParking = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:5000/parking/availability');
+        const res = await fetch('http://localhost:5000/api/parking/availability'); // ← FIXED
 
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
@@ -100,8 +92,6 @@ export default function Explore() {
     };
 
     fetchParking();
-
-    // Auto-refresh every 60 seconds to keep data live
     const interval = setInterval(fetchParking, 60_000);
     return () => clearInterval(interval);
   }, []);
@@ -109,7 +99,6 @@ export default function Explore() {
   return (
     <div className="min-h-screen w-full bg-white">
 
-      {/* ── Hero Banner ── */}
       <div className="pt-24 px-6 sm:px-8 lg:px-10">
         <div className="relative w-full h-[60vh] rounded-2xl overflow-hidden shadow-xl">
           <div
@@ -139,8 +128,6 @@ export default function Explore() {
               <p className="text-white/70 text-sm sm:text-base max-w-xl">
                 Real-time parking availability across Singapore's smart network.
               </p>
-
-              {/* Live / Cache badge */}
               {!loading && (
                 <span className={`w-fit text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${
                   fromCache
@@ -155,10 +142,7 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ── Map ── */}
       <div className="px-6 sm:px-8 lg:px-10 mt-10">
-
-        {/* Loading state */}
         {loading && (
           <div className="w-full h-[55vh] rounded-2xl border flex items-center justify-center bg-surface-container-low">
             <p className="text-on-surface-variant font-headline font-bold uppercase tracking-widest text-sm animate-pulse">
@@ -167,7 +151,6 @@ export default function Explore() {
           </div>
         )}
 
-        {/* Error state */}
         {!loading && error && (
           <div className="w-full h-[55vh] rounded-2xl border flex flex-col items-center justify-center bg-red-50 gap-4">
             <p className="text-red-700 font-bold text-sm">⚠ {error}</p>
@@ -180,7 +163,6 @@ export default function Explore() {
           </div>
         )}
 
-        {/* Map — only renders when data is ready */}
         {!loading && !error && (
           <div className="w-full h-[55vh] rounded-2xl overflow-hidden shadow-lg border">
             <Map
@@ -193,7 +175,6 @@ export default function Explore() {
                 attribution="&copy; OpenStreetMap contributors"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-
               {carparks.map((cp, i) => (
                 <MapMarker
                   key={`${cp.carparkNumber}-${i}`}
@@ -205,14 +186,12 @@ export default function Explore() {
                 >
                   <MapTooltip direction="top" offset={[0, -10]} opacity={1}>
                     <div className="w-64 max-h-60 overflow-y-auto space-y-2 pr-1">
-
                       <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                         <span>📍 Location</span>
                         <span className="text-[#660000] font-bold text-right max-w-[140px] truncate">
                           {cp.development}
                         </span>
                       </div>
-
                       <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                         <span>🚗 Status</span>
                         <span className={
@@ -225,32 +204,26 @@ export default function Explore() {
                           {getStatusLabel(cp.availableLots)}
                         </span>
                       </div>
-
                       <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                         <span>🏢 Area</span>
                         <span className="text-[#660000] font-bold">{cp.area || 'N/A'}</span>
                       </div>
-
                       <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                         <span>🅿️ Slots</span>
                         <span className="text-[#660000] font-bold">{cp.availableLots}</span>
                       </div>
-
                       <div className="flex justify-between bg-gray-50 border-l-4 border-[#660000] px-3 py-2 rounded-md">
                         <span>🏷 Type</span>
                         <span>{cp.lotType}</span>
                       </div>
-
                     </div>
                   </MapTooltip>
                 </MapMarker>
               ))}
-
             </Map>
           </div>
         )}
 
-        {/* Empty state — API returned nothing */}
         {!loading && !error && carparks.length === 0 && (
           <p className="text-center text-on-surface-variant text-sm mt-6">
             No carpark data available for the selected zones right now.
@@ -258,10 +231,8 @@ export default function Explore() {
         )}
       </div>
 
-      {/* ── Legend ── */}
       <div className="px-6 sm:px-8 lg:px-10 mt-6 mb-12">
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h3 className="text-sm font-bold uppercase tracking-widest text-[#660000]">
               Availability Status
@@ -272,7 +243,6 @@ export default function Explore() {
               </span>
             )}
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center text-center">
             <div className="flex flex-col items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-600" />
