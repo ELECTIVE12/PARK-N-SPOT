@@ -8,9 +8,6 @@ import findparkgo from "../../components/images/findparkgo.png";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// ─────────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────────
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -22,13 +19,12 @@ export function Login() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
-  // ── Real backend login ──
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -45,8 +41,7 @@ export function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
-      window.dispatchEvent(new Event('auth-change'));
-      navigate('/explore');
+      window.location.href = '/explore'; // ← FIXED: forces full reload
     } catch {
       setError('Cannot connect to server. Make sure the backend is running.');
     } finally {
@@ -54,17 +49,15 @@ export function Login() {
     }
   };
 
-  // ── Google OAuth — redirects to backend ──
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`;
   };
 
-  // ── Forgot password ──
   const handleForgotPassword = async () => {
     if (!resetEmail) return;
     setResetLoading(true);
     try {
-      await fetch(`${API_URL}/auth/forgot-password`, {
+      await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail }),
@@ -79,8 +72,6 @@ export function Login() {
 
   return (
     <main className="min-h-screen lg-h-screen w-full flex flex-col lg:flex-row bg-surface">
-
-      {/* ── Left Visual ── */}
       <section className="relative w-full lg:w-7/12 h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-screen lg:sticky lg:top-0 overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-primary/20 z-10" />
         <img
@@ -97,7 +88,6 @@ export function Login() {
         </div>
       </section>
 
-      {/* ── Right Form ── */}
       <section className="w-full lg:w-5/12 bg-surface flex flex-col justify-between p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 h-full overflow-hidden">
         <header className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
           <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park 'n Spot</h1>
@@ -118,7 +108,6 @@ export function Login() {
             </h2>
           </div>
 
-          {/* ── Error Banner ── */}
           {error && (
             <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
@@ -203,7 +192,6 @@ export function Login() {
         </div>
       </section>
 
-      {/* ── Forgot Password Modal ── */}
       {showForgotModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-sm w-full p-5 sm:p-6 md:p-8 space-y-4 shadow-xl mx-4">
@@ -260,9 +248,6 @@ export function Login() {
   );
 }
 
-// ─────────────────────────────────────────────
-// SIGN UP
-// ─────────────────────────────────────────────
 export function SignUp() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -283,7 +268,7 @@ export function SignUp() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/signup`, {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -296,8 +281,7 @@ export function SignUp() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
-      window.dispatchEvent(new Event('auth-change'));
-      navigate('/verify');
+      window.location.href = '/verify'; // ← FIXED: forces full reload
     } catch {
       setError('Cannot connect to server. Make sure the backend is running.');
     } finally {
@@ -435,7 +419,6 @@ export function SignUp() {
         </div>
       </main>
 
-      {/* ── Terms Modal ── */}
       {showTermsModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full max-h-[85vh] overflow-y-auto p-5 sm:p-6 md:p-8 space-y-4 shadow-xl mx-4">
@@ -470,9 +453,6 @@ export function SignUp() {
   );
 }
 
-// ─────────────────────────────────────────────
-// VERIFY
-// ─────────────────────────────────────────────
 export function Verify() {
   const navigate = useNavigate();
   const [resendLoading, setResendLoading] = useState(false);
@@ -482,7 +462,7 @@ export function Verify() {
     setResendLoading(true);
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API_URL}/auth/resend-verification`, {
+      await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
@@ -543,9 +523,6 @@ export function Verify() {
   );
 }
 
-// ─────────────────────────────────────────────
-// AUTH SUCCESS
-// ─────────────────────────────────────────────
 export function AuthSuccess() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
