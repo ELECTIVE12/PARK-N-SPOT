@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Footer } from '../../components/footer';
+import { Footer } from '../../components/Footer';
 import Logo from "../../components/Logo/logo.png";
 import { 
   LayoutDashboard, 

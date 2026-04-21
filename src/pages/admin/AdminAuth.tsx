@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Footer } from '../../components/footer'
+import { Footer } from '../../components/Footer'
 import Logo from "../../components/Logo/logo.png";
 import { useNavigate } from 'react-router-dom';
 import { Lock, PersonStanding, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
