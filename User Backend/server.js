@@ -1,78 +1,41 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const session = require('express-session');
-const passport = require('passport');
-const connectDB = require('./config/db');
-const { createServer } = require('http');          // ← ADD
-const { initSocket, getIO } = require('./socket'); // ← ADD
-
-// Passport Google Strategy config
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('./models/User');
-
-const app = express();
-const httpServer = createServer(app); // ← ADD
-connectDB();
-
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-app.use(express.json());
-app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false }));
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Google OAuth Strategy
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL,
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails[0].value;
-
-    let user = await User.findOne({ googleId: profile.id });
-
-    if (!user) {
-      user = await User.findOne({ email });
-
-      if (user) {
-        user.googleId = profile.id;
-        user.avatar = profile.photos[0].value;
-        await user.save();
-      } else {
-        user = new User({
-          googleId: profile.id,
-          name: profile.displayName,
-          email: email,
-          avatar: profile.photos[0].value,
-          password: profile.id,
-        });
-        await user.save();
-      }
-    }
-
-    return done(null, user);
-  } catch (err) {
-    return done(err, null);
-  }
-}));
-
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  done(null, user);
-});
-
-// Routes
-app.use('/auth', require('./routes/auth'));
-app.use('/auth/google', require('./routes/google'));
-app.use('/parking', require('./routes/parking'));
-app.use('/api/notifications', require('./routes/notificationRoutes')); // ← ADD
-
-app.get('/', (req, res) => res.send('Park n Spot API Running ✅'));
+const http = require('http');
+const app = require('./app');
+const connectDB = require('./config/db'); // ← FIXED: removed destructuring
+const { initSocket } = require('./socket');
+const { watchParkingSpots } = require('./services/parkingNotificationService');
+const ParkingCache = require('./models/ParkingCache');
+const User = require('./models/User'); // ← FIXED: moved out of inline require
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {                    // ← CHANGE app.listen → httpServer.listen
-  console.log(`🚀 Server running on port ${PORT}`);
-  initSocket(httpServer);                          // ← ADD
-});
+
+const start = async () => {
+  try {
+    // 1. Connect to MongoDB first
+    await connectDB();
+
+    // 2. Create HTTP server from Express app
+    const httpServer = http.createServer(app);
+
+    // 3. Initialize Socket.IO and attach to HTTP server
+    const io = initSocket(httpServer);
+
+    // 4. Start the parking spot change stream watcher
+    const getUserIdsForSpot = async (spot) => {
+      const users = await User.find({ watchedSpots: spot._id }, '_id'); // ← FIXED: uses top-level import
+      return users.map((u) => u._id);
+    };
+
+    watchParkingSpots(ParkingCache, getUserIdsForSpot, io);
+
+    // 5. Start listening
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.error('❌ Server failed to start:', err.message);
+    process.exit(1);
+  }
+};
+
+start();
