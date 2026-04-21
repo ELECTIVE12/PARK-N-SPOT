@@ -9,13 +9,17 @@ export function useNotifications(token) {
 
   const fetchNotifications = useCallback(async () => {
     if (!token) return;
-    const res = await fetch(`${API_URL}/api/notifications`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (data.success) {
-      setNotifications(data.notifications);
-      setUnreadCount(data.notifications.filter((n) => !n.isRead).length);
+    try {
+      const res = await fetch(`${API_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(data.notifications);
+        setUnreadCount(data.notifications.filter((n) => !n.isRead).length);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
     }
   }, [token]);
 
@@ -32,12 +36,16 @@ export function useNotifications(token) {
   }, [token]);
 
   const markAllRead = useCallback(async () => {
-    await fetch(`${API_URL}/api/notifications/mark-all-read`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    setUnreadCount(0);
+    try {
+      await fetch(`${API_URL}/api/notifications/mark-all-read`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all read:', err);
+    }
   }, [token]);
 
   return { notifications, unreadCount, markAllRead, refetch: fetchNotifications };
