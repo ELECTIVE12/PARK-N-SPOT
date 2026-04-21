@@ -19,7 +19,7 @@ import { AdminLogin } from './pages/admin/AdminAuth';
 function AppContent() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem('isLoggedIn') === 'true';
+    return localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token');
   });
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -27,11 +27,10 @@ function AppContent() {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
+      setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token'));
       setIsAdminLoggedIn(localStorage.getItem('isAdminLoggedIn') === 'true');
     };
     window.addEventListener('storage', handleStorageChange);
-    // Custom event for same-window updates
     window.addEventListener('auth-change', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -39,7 +38,6 @@ function AppContent() {
     };
   }, []);
 
-  // Hide headers on About Us (landing), Login, Signup, Verify, and Admin pages
   const isAuthPage = ['/login', '/signup', '/verify'].includes(location.pathname);
   const isAdminPage = location.pathname.startsWith('/admin');
   const isLandingPage = location.pathname === '/';
@@ -68,8 +66,8 @@ function AppContent() {
             element={isLoggedIn ? <Report /> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/profile" 
-            element={isLoggedIn ? <Profile /> : <Navigate to="/login" />} 
+            path="/profile"
+            element={isLoggedIn ? <Profile /> : <Navigate to="/login" />}
           />
           <Route 
             path="/facility/:id" 
@@ -101,7 +99,6 @@ function AppContent() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to={isLoggedIn ? "/explore" : "/"} />} />
         </Routes>
-       
       </div>
       {!shouldHideNav && <BottomNav />}
       {!shouldHideNav && <Footer />}
