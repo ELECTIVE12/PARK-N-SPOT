@@ -35,11 +35,19 @@ const notifyParkingFull = async ({ userId, spotName, parkingSpotId = null, metad
   });
 };
 
+// FIX 1: broadcastNotification — emit using notification.userId instead of index-based matching
 const broadcastNotification = async ({ userIds, title, message, type = 'system', io = null }) => {
   try {
     const docs = userIds.map((userId) => ({ userId, type, title, message, isRead: false }));
     const notifications = await Notification.insertMany(docs);
-    if (io) userIds.forEach((userId, i) => io.to(`user:${userId}`).emit('notification:new', notifications[i]));
+
+    if (io) {
+      // Safe: emit to each user using the notification's own userId field
+      notifications.forEach((n) => {
+        io.to(`user:${n.userId}`).emit('notification:new', n);
+      });
+    }
+
     return notifications;
   } catch (err) {
     console.error('broadcastNotification error:', err);
@@ -47,15 +55,24 @@ const broadcastNotification = async ({ userIds, title, message, type = 'system',
   }
 };
 
+// FIX 2: watchParkingSpots — added replica set error guard + safe close
 const watchParkingSpots = (ParkingSpotModel, getUserIdsForSpot, io = null) => {
-  const changeStream = ParkingSpotModel.watch(
-    [{ $match: { operationType: { $in: ['update', 'replace'] } } }],
-    { fullDocument: 'updateLookup' }
-  );
+  let changeStream;
+
+  try {
+    changeStream = ParkingSpotModel.watch(
+      [{ $match: { operationType: { $in: ['update', 'replace'] } } }],
+      { fullDocument: 'updateLookup' }
+    );
+  } catch (err) {
+    console.error('❌ Failed to start change stream. Make sure MongoDB is running as a replica set.', err.message);
+    return null;
+  }
 
   changeStream.on('change', async (change) => {
     const spot = change.fullDocument;
     if (!spot) return;
+
     const wasAvailable = change.updateDescription?.updatedFields?.availableSpaces;
     if (wasAvailable === undefined) return;
 
@@ -73,7 +90,16 @@ const watchParkingSpots = (ParkingSpotModel, getUserIdsForSpot, io = null) => {
     }
   });
 
-  changeStream.on('error', (err) => console.error('Change stream error:', err));
+  changeStream.on('error', (err) => {
+    // Error code 40573 = change streams require replica set
+    if (err.code === 40573) {
+      console.error('❌ Change streams require a MongoDB replica set. Parking watcher disabled.');
+      changeStream.close();
+    } else {
+      console.error('Change stream error:', err);
+    }
+  });
+
   console.log('✅ Parking spot watcher started');
   return changeStream;
 };
