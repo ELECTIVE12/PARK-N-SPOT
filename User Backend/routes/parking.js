@@ -3,11 +3,11 @@ const axios = require('axios');
 const ParkingCache = require('../models/ParkingCache');
 const router = express.Router();
 
-// Your 3 frontend locations — filter LTA data to only these zones
+// Fixed coordinates to match actual LTA carpark locations
 const TARGET_ZONES = [
-  { name: 'Orchard', lat: 1.3521, lng: 103.8198, radius: 0.8 },
-  { name: 'Marina Bay', lat: 1.3600, lng: 103.8200, radius: 0.8 },
-  { name: 'Bugis', lat: 1.3400, lng: 103.8300, radius: 0.8 },
+  { name: 'Orchard', lat: 1.3040, lng: 103.8340, radius: 0.8 },
+  { name: 'Marina', lat: 1.2920, lng: 103.8560, radius: 0.8 },
+  { name: 'Harbourfront', lat: 1.2640, lng: 103.8210, radius: 0.8 },
 ];
 
 function getDistance(lat1, lng1, lat2, lng2) {

@@ -7,12 +7,30 @@ export default function Report() {
   const [submitted, setSubmitted] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [locations, setLocations] = React.useState<string[]>([]);
+  const [locationsLoading, setLocationsLoading] = React.useState(true);
 
   const [form, setForm] = React.useState({
-    location: 'Municipal',
+    location: '',
     status: 'available',
     notes: '',
   });
+
+  // Fetch locations from API
+  React.useEffect(() => {
+    fetch(`${API_URL}/api/parking/cached`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.length > 0) {
+          // Get unique development names
+          const unique = [...new Set(data.data.map((spot: any) => spot.development))] as string[];
+          setLocations(unique);
+          setForm(prev => ({ ...prev, location: unique[0] })); // set default to first
+        }
+      })
+      .catch(err => console.error('Failed to fetch locations', err))
+      .finally(() => setLocationsLoading(false));
+  }, []);
 
   const handleSubmit = async () => {
     setError('');
@@ -25,7 +43,6 @@ export default function Report() {
       return;
     }
 
-    // Map form status to title/description for the complaints API
     const statusMap: Record<string, string> = {
       available: 'Parking Available',
       full: 'Parking Full',
@@ -50,7 +67,7 @@ export default function Report() {
       if (!res.ok) throw new Error(data.message || 'Failed to submit report');
 
       setSubmitted(true);
-      setForm({ location: 'Municipal', status: 'available', notes: '' });
+      setForm(prev => ({ ...prev, status: 'available', notes: '' }));
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -76,11 +93,17 @@ export default function Report() {
                 <select
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  className="w-full bg-surface-container-high border-none rounded-sm py-4 px-5 text-on-surface focus:ring-1 focus:ring-outline appearance-none">
-                  <option>Municipal</option>
-                  <option>The Cabanas</option>
-                  <option>North Polo</option>
-                  <option>Convention Center</option>
+                  disabled={locationsLoading}
+                  className="w-full bg-surface-container-high border-none rounded-sm py-4 px-5 text-on-surface focus:ring-1 focus:ring-outline appearance-none disabled:opacity-50">
+                  {locationsLoading ? (
+                    <option>Loading locations...</option>
+                  ) : locations.length === 0 ? (
+                    <option>No locations available</option>
+                  ) : (
+                    locations.map((loc) => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))
+                  )}
                 </select>
                 <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-on-surface-variant">
                   <ChevronDown size={20} />
@@ -125,23 +148,18 @@ export default function Report() {
               />
             </div>
 
-            {/* Error */}
-            {error && (
-              <p className="text-red-600 text-sm font-semibold">{error}</p>
-            )}
+            {error && <p className="text-red-600 text-sm font-semibold">{error}</p>}
 
-            {/* Success */}
             {submitted && (
               <p className="text-[#330000] text-sm flex items-center gap-2">
                 <CheckCircle2 size={16} /> Report submitted! Your update helps keep parking information accurate.
               </p>
             )}
 
-            {/* Submit */}
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={loading || submitted}
+              disabled={loading || submitted || locationsLoading}
               className="w-full md:w-auto px-12 py-4 bg-primary-container text-white font-headline font-bold rounded-sm hover:bg-primary transition-all duration-300 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
               {loading ? 'Submitting...' : submitted ? 'Submitted!' : 'Submit Report'}
             </button>
