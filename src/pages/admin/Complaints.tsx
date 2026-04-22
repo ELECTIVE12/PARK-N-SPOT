@@ -5,8 +5,7 @@ import { motion } from "motion/react";
 import AdminLayout from "./AdminLayout";
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { PDFComplaintsReport } from '../../components/PDFComplaintsReport';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { ADMIN_API_URL } from "../../lib/api";
 
 type Complaint = {
   _id: string;
@@ -33,7 +32,7 @@ function ComplaintsScreen() {
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/complaints?limit=100`, { headers });
+      const res = await fetch(`${ADMIN_API_URL}/api/complaints?limit=100`, { headers });
       const data = await res.json();
       if (data.success) {
         setComplaints(data.data);
@@ -50,7 +49,7 @@ function ComplaintsScreen() {
 
   const handleStatusUpdate = async (id: string, status: Complaint['status']) => {
     try {
-      await fetch(`${API_URL}/api/complaints/${id}/status`, {
+      await fetch(`${ADMIN_API_URL}/api/complaints/${id}/status`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status }),
@@ -101,7 +100,7 @@ function ComplaintsScreen() {
             />
             <div className="relative z-10 w-full">
               <p className="text-secondary-container font-bold text-lg leading-tight break-words w-full">Priority Escalation Active</p>
-              <p className="text-white/70 text-sm mt-1 break-words w-full">3 slots in Zone A require immediate technical attention.</p>
+              <p className="text-white/70 text-sm mt-1 break-words w-full">{counts.PENDING} complaints require immediate attention.</p>
             </div>
           </div>
         </div>

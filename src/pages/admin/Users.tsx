@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, Edit2, Ban, Trash2, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { Search, Eye, Edit2, Ban, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion } from "motion/react";
 import AdminLayout from "./AdminLayout";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 import { ADMIN_API_URL } from "../../lib/api";
 
 type User = {
@@ -34,7 +32,7 @@ function UsersScreen() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, { headers });
+      const res = await fetch(`${ADMIN_API_URL}/api/users?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, { headers });
       const data = await res.json();
       if (data.success) {
         setUsers(data.data);
@@ -51,12 +49,12 @@ function UsersScreen() {
 
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
-    await fetch(`${API_URL}/api/users/${id}`, { method: 'DELETE', headers });
+    await fetch(`${ADMIN_API_URL}/api/users/${id}`, { method: 'DELETE', headers });
     fetchUsers();
   };
 
   const handleToggleStatus = async (id: string) => {
-    await fetch(`${API_URL}/api/users/${id}/toggle-status`, { method: 'PATCH', headers });
+    await fetch(`${ADMIN_API_URL}/api/users/${id}/toggle-status`, { method: 'PATCH', headers });
     fetchUsers();
   };
 
@@ -68,7 +66,7 @@ function UsersScreen() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-    await fetch(`${API_URL}/api/users/${editingUser._id}`, {
+    await fetch(`${ADMIN_API_URL}/api/users/${editingUser._id}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(editForm),
@@ -162,6 +160,10 @@ function UsersScreen() {
               <div className="p-20 text-center">
                 <p className="text-on-surface-variant animate-pulse font-bold uppercase tracking-widest text-sm">Loading users...</p>
               </div>
+            ) : users.length === 0 ? (
+              <div className="p-20 text-center">
+                <p className="text-on-surface-variant font-medium italic">No users found.</p>
+              </div>
             ) : (
               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
@@ -223,7 +225,7 @@ function UsersScreen() {
           </div>
           <div className="py-5 px-8 flex justify-between items-center bg-surface-container-low border-t border-outline-variant/10">
             <p className="text-xs text-on-surface-variant font-medium">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} Users
+              Showing {total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} Users
             </p>
             <div className="flex space-x-1">
               <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}

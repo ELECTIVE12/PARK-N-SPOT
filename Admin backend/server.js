@@ -14,7 +14,14 @@ const { startSyncScheduler } = require('./services/ltaService');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+app.use(cors({ 
+  origin: [
+    'https://parknspott.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ], 
+  credentials: true 
+}));
 app.use(express.json());
 app.use(requestLogger);
 
@@ -29,7 +36,7 @@ app.get('/api/health', (req, res) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 mongoose
   .connect(process.env.MONGODB_URI)
