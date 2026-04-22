@@ -4,7 +4,7 @@ import Logo from "../../components/Logo/logo.png";
 import { useNavigate } from 'react-router-dom';
 import { Lock, PersonStanding, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:5001';
 
 export function AdminLogin() {
   const navigate = useNavigate();
