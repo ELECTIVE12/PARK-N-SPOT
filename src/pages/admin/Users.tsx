@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import AdminLayout from "./AdminLayout";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { ADMIN_API_URL } from "../../lib/api";
 
 type User = {
   _id: string;
