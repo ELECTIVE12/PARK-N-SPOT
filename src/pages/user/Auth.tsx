@@ -41,7 +41,7 @@ export function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
-      window.location.href = '/explore'; // ← FIXED: forces full reload
+      window.location.href = '/explore';
     } catch {
       setError('Cannot connect to server. Make sure the backend is running.');
     } finally {
@@ -281,7 +281,7 @@ export function SignUp() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
-      window.location.href = '/verify'; // ← FIXED: forces full reload
+      window.location.href = '/verify';
     } catch {
       setError('Cannot connect to server. Make sure the backend is running.');
     } finally {
@@ -524,7 +524,6 @@ export function Verify() {
 }
 
 export function AuthSuccess() {
-  const navigate = useNavigate();
   const [error, setError] = useState('');
 
   React.useEffect(() => {
@@ -535,11 +534,10 @@ export function AuthSuccess() {
       localStorage.setItem('token', token);
       localStorage.setItem('userName', name ?? '');
       localStorage.setItem('isLoggedIn', 'true');
-      window.dispatchEvent(new Event('auth-change'));
-      navigate('/explore');
+      window.location.href = '/explore'; // ✅ FIXED: forces full reload
     } else {
       setError('Authentication failed. Please try again.');
-      setTimeout(() => navigate('/login'), 3000);
+      setTimeout(() => { window.location.href = '/login'; }, 3000);
     }
   }, []);
 
