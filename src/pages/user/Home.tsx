@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import findparkgo from "../../components/images/findparkgo.png";
+import { API_URL } from "../lib/api";
 
 export default function Home() {
 

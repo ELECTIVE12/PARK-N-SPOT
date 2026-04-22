@@ -6,6 +6,7 @@ import { StatData } from "../../types";
 import { motion } from "motion/react";
 import { store } from "../../lib/store";
 import AdminLayout from "./AdminLayout";
+import { ADMIN_API_URL } from "../../lib/api";
 
 const lineData = [
   { time: '06:00', occupancy: 150, vacancy: 180 },
