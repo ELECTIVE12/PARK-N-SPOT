@@ -1,16 +1,34 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Home, History, FileText, User, Map as MapIcon,} from 'lucide-react';
+import { Bell, Home, History, FileText, User, Map as MapIcon } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import profile from "./images/profile.jpg";
 import { useEffect, useState } from "react";
-
+import { useNotifications } from '../../hooks/useNotifications';
 
 export function TopNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
-  const [hasUnread, setHasUnread] = React.useState(true);
+
+  // ✅ FIXED: checks both token and isLoggedIn, same as App.tsx
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token')
+  );
+
+  const token = localStorage.getItem('token');
+  const { notifications, unreadCount, markAllRead } = useNotifications(token);
+
+  useEffect(() => {
+    // ✅ FIXED: syncs both isLoggedIn and token on auth changes
+    const syncAuth = () => {
+      setIsLoggedIn(
+        localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token')
+      );
+    };
+    window.addEventListener('auth-change', syncAuth);
+    return () => window.removeEventListener('auth-change', syncAuth);
+  }, []);
 
   const navItems = [
     { name: 'Home', path: '/home' },
@@ -21,6 +39,7 @@ export function TopNav() {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('token');
     window.dispatchEvent(new Event('auth-change'));
     navigate('/');
   };
@@ -28,8 +47,8 @@ export function TopNav() {
   return (
     <nav className="fixed top-0 w-full z-50 glass-nav flex justify-between items-center px-8 h-20">
       <div className="flex items-center gap-8">
-        <Link to="/home" className="text-xl font-headline font-extrabold  ml-8 tracking-tighter text-[#330000]">
-          Park ‘n Spot
+        <Link to="/home" className="text-xl font-headline font-extrabold ml-8 tracking-tighter text-[#330000]">
+          Park 'n Spot
         </Link>
         <div className="hidden md:flex gap-8">
           {navItems.map((item) => (
@@ -52,41 +71,51 @@ export function TopNav() {
       <div className="relative flex items-center gap-4">
         <button
           onClick={() => setOpen(!open)}
-          className=" relative p-2 text-on-surface-variant hover:text-primary transition-colors">
+          className="relative p-2 text-on-surface-variant hover:text-primary transition-colors">
           <Bell size={20} />
-          {hasUnread && (
+          {unreadCount > 0 && (
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           )}
         </button>
 
-
         {open && (
           <div className="absolute right-0 top-12 w-64 bg-white shadow-md rounded-md p-3">
             <p className="text-sm text-[#330000] font-semibold mb-2">Notifications</p>
-            <div className="text-sm border-b pb-2 mb-2">
-              New update available
-            </div>
-            <div className="text-sm border-b pb-2 mb-2">
-              Parking data updated
-            </div>
+
+            {notifications.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-2">No notifications</p>
+            ) : (
+              notifications.slice(0, 5).map((n) => (
+                <div key={n._id} className={cn("text-sm border-b pb-2 mb-2", !n.isRead && "font-semibold")}>
+                  <p>{n.title}</p>
+                  <p className="text-xs text-gray-500">{n.message}</p>
+                </div>
+              ))
+            )}
+
             <div
               onClick={() => {
-                setHasUnread(false);
+                markAllRead();
                 setOpen(false);
               }}
-              className="text-sm text-[#330000] text-center cursor-pointer">
+              className="text-sm text-[#330000] text-center cursor-pointer mt-1">
               Mark all as read
             </div>
           </div>
         )}
-        <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20">
+
+        {/* ✅ FIXED: now checks both isLoggedIn and token */}
+        <button
+          onClick={() => navigate(isLoggedIn ? '/profile' : '/login')}
+          className="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20"
+        >
           <img
             src={profile}
             alt="profile picture"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-        </Link>
+        </button>
       </div>
     </nav>
   );
@@ -96,7 +125,7 @@ export function Footer() {
   return (
     <footer className="py-8 bg-surface-container-low border-t border-outline-variant/10">
       <div className="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-6">
-        <p className="text-on-surface-variant  text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park ‘n Spot. Computer Engineering Students. All rights reserved.</p>
+        <p className="text-on-surface-variant text-center tracking-[0.3em] text-[10px] opacity-70 font-body">© 2026 Park 'n Spot. Computer Engineering Students. All rights reserved.</p>
       </div>
     </footer>
   );
@@ -110,14 +139,12 @@ export function BottomNav() {
     const handleScroll = () => {
       const atBottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 50;
-
       setHideNav(atBottom);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
 
   const items = [
     { name: 'Home', path: '/home', icon: Home },
@@ -127,7 +154,7 @@ export function BottomNav() {
     { name: 'Report', path: '/report', icon: FileText },
   ];
 
- return (
+  return (
     <nav
       className={cn(
         "md:hidden fixed bottom-0 left-0 w-full h-20 glass-nav flex justify-around items-center px-6 pb-safe z-50 rounded-t-xl shadow-2xl transition-all duration-300",
@@ -157,4 +184,3 @@ export function BottomNav() {
     </nav>
   );
 }
-

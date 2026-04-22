@@ -1,54 +1,96 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, ArrowLeft, RefreshCw, LayoutGrid, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowLeft, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Footer } from '../../components/Footer';
-import { store } from '@/src/lib/store';
 import smart from "../../components/images/smart.png";
 import findparkgo from "../../components/images/findparkgo.png";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = store.loginUser(email, password);
-    if (!user) {
-      store.registerUser(email.split('@')[0], email, password);
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.googleAccount) {
+          setError('This account was created with Google. Please use "Log in with Google" below.');
+        } else {
+          setError(data.message || 'Login failed. Please try again.');
+        }
+        return;
+      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('isLoggedIn', 'true');
+      window.location.href = '/explore'; // ← FIXED: forces full reload
+    } catch {
+      setError('Cannot connect to server. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
     }
-    localStorage.setItem('isLoggedIn', 'true');
-    window.dispatchEvent(new Event('auth-change'));
-    navigate('/explore');
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) return;
+    setResetLoading(true);
+    try {
+      await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      setResetSent(true);
+    } catch {
+      setResetSent(true);
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen lg-h-screen w-full flex flex-col lg:flex-row bg-surface">
-
       <section className="relative w-full lg:w-7/12 h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-screen lg:sticky lg:top-0 overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-primary/20 z-10"></div>
+        <div className="absolute inset-0 bg-primary/20 z-10" />
         <img
           src={smart}
           alt="smart parking"
           className="w-full h-full object-cover grayscale contrast-125 scale-105"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent opacity-90"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent opacity-90" />
         <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 lg:bottom-12 lg:left-12 z-20">
-          <div className="flex flex-col gap-1 sm:gap-2">
-            <h2 className="text-white font-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tighter max-w-[85%] sm:max-w-xs leading-tight uppercase">
-              SMART PARKING STARTS HERE.
-            </h2>
-          </div>
+          <h2 className="text-white font-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tighter max-w-[85%] sm:max-w-xs leading-tight uppercase">
+            SMART PARKING STARTS HERE.
+          </h2>
         </div>
       </section>
 
       <section className="w-full lg:w-5/12 bg-surface flex flex-col justify-between p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 h-full overflow-hidden">
         <header className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
-          <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park ‘n Spot</h1>
+          <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park 'n Spot</h1>
         </header>
 
         <div className="flex flex-col justify-center max-w-md w-full mx-auto flex-grow">
@@ -65,6 +107,12 @@ export function Login() {
               Enter the Spot
             </h2>
           </div>
+
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
+            </div>
+          )}
 
           <form className="space-y-4 sm:space-y-5 md:space-y-6" onSubmit={handleLogin}>
             <div className="space-y-2 sm:space-y-3">
@@ -88,20 +136,17 @@ export function Login() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => setShowForgotModal(true)}
+                  onClick={() => { setShowForgotModal(true); setResetSent(false); }}
                   className="text-[9px] sm:text-[10px] font-headline uppercase tracking-widest text-secondary hover:text-primary transition-colors"
                 >
                   Forgot Password?
                 </button>
               </div>
-
               <input
                 className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                 placeholder="••••••••"
                 type="password"
                 required
-                title="must be at least 8 characters with A-Z a-z letters, 0-9, and @$!%*#?& symbols"
-                pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -110,14 +155,15 @@ export function Login() {
             <div className="pt-2 sm:pt-3 flex flex-col gap-4 sm:gap-5 md:gap-6">
               <button
                 type="submit"
-                className="w-full bg-[#660000] py-3 sm:py-4 text-surface-container-lowest border-none cursor-pointer font-headline font-bold text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 text-center rounded-md"
+                disabled={loading}
+                className="w-full bg-[#660000] py-3 sm:py-4 text-surface-container-lowest border-none cursor-pointer font-headline font-bold text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 text-center rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                LOG IN
+                {loading ? 'Logging in...' : 'LOG IN'}
               </button>
 
               <button
                 type="button"
-                onClick={handleLogin}
+                onClick={handleGoogleLogin}
                 className="w-full border border-outline-variant/50 py-3 sm:py-4 text-on-surface font-headline font-semibold text-[11px] sm:text-xs tracking-widest uppercase hover:bg-surface-container-low transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 rounded-md"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -140,46 +186,61 @@ export function Login() {
             </div>
           </form>
         </div>
+
         <div className="mt-4">
           <Footer />
         </div>
       </section>
 
-      {/* FORGOT PASSWORD MODAL */}
       {showForgotModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-sm w-full p-5 sm:p-6 md:p-8 space-y-4 shadow-xl mx-4">
             <h2 className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Forgot Password</h2>
-            <p className="text-xs text-on-surface-variant">Please provide your email address below to receive a password reset link.</p>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full bg-surface-container-high border-none focus:outline-none focus:ring-2 focus:ring-outline py-3 px-4 text-sm placeholder:text-outline/50 rounded-md"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
-              <button
-                type="button"
-                className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
-                onClick={() => setShowForgotModal(false)}
-              >
-                Back to Login
-              </button>
-              <button
-                type="button"
-                className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md text-center"
-                onClick={() => {
-                  alert(`Password reset link sent to ${resetEmail}`);
-                  setShowForgotModal(false);
-                  setResetEmail('');
-                }}
-              >
-                Send
-              </button>
-            </div>
+            {resetSent ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
+                  <Mail size={18} className="text-green-700 shrink-0" />
+                  <p className="text-xs text-green-700 font-medium">
+                    If that email exists in our system, a reset link has been sent. Check your inbox.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="w-full font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+                  onClick={() => { setShowForgotModal(false); setResetEmail(''); }}
+                >
+                  Back to Login
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-on-surface-variant">Enter your email address to receive a password reset link.</p>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="w-full bg-surface-container-high border-none focus:outline-none focus:ring-2 focus:ring-outline py-3 px-4 text-sm placeholder:text-outline/50 rounded-md"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                />
+                <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+                    onClick={() => { setShowForgotModal(false); setResetEmail(''); }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetLoading || !resetEmail}
+                    className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={handleForgotPassword}
+                  >
+                    {resetLoading ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -195,19 +256,46 @@ export function SignUp() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    store.registerUser(name, email, password);
-    localStorage.setItem('isLoggedIn', 'true');
-    window.dispatchEvent(new Event('auth-change'));
-    navigate('/verify');
+    if (!acceptedTerms) {
+      setError('You must accept the Terms and Conditions to continue.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Registration failed. Please try again.');
+        return;
+      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('isLoggedIn', 'true');
+      window.location.href = '/verify'; // ← FIXED: forces full reload
+    } catch {
+      setError('Cannot connect to server. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = () => {
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-white min-h-screen flex flex-col">
       <main className="bg-surface-container-low w-full flex flex-col lg:flex-row">
-        {/* LEFT VISUAL - sticky on desktop */}
         <div className="lg:w-5/12 relative h-[35vh] sm:h-[40vh] md:h-[45vh] lg:h-screen lg:sticky lg:top-0 bg-primary overflow-hidden">
           <img
             className="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 mix-blend-luminosity"
@@ -215,9 +303,9 @@ export function SignUp() {
             alt="findparkgo"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent opacity-90"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent opacity-90" />
           <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 lg:bottom-12 lg:left-12 z-10">
-            <div className="w-8 sm:w-10 h-1 bg-secondary-container mb-3 sm:mb-4 lg:mb-6"></div>
+            <div className="w-8 sm:w-10 h-1 bg-secondary-container mb-3 sm:mb-4 lg:mb-6" />
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-surface-container-lowest tracking-tighter max-w-xs leading-tight uppercase font-headline">
               Find. Park. Go.
             </h2>
@@ -230,18 +318,19 @@ export function SignUp() {
         <div className="lg:w-7/12 bg-surface-container-low p-5 sm:p-8 md:p-12 lg:p-16 xl:p-20 flex flex-col justify-center overflow-y-auto">
           <div className="max-w-md w-full mx-auto relative">
             <header className="flex items-center gap-3 mb-6 sm:mb-8">
-              <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park ‘n Spot</h1>
+              <h1 className="font-headline font-black text-xl sm:text-2xl tracking-tighter text-primary">Park 'n Spot</h1>
             </header>
-
             <div className="mb-4 sm:mb-5">
               <h2 className="font-headline text-3xl sm:text-4xl font-extrabold text-primary tracking-tight leading-tight">Sign Up</h2>
             </div>
-
+            {error && (
+              <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
+              </div>
+            )}
             <form className="space-y-4 sm:space-y-5" onSubmit={handleRegister}>
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Full Name
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Full Name</label>
                 <input
                   className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                   placeholder="e.g Juan Dela Cruz"
@@ -251,11 +340,8 @@ export function SignUp() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
-
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Email
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Email</label>
                 <input
                   className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                   placeholder="juandelacruz@gmail.com"
@@ -265,16 +351,13 @@ export function SignUp() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-
               <div className="space-y-1 sm:space-y-2">
-                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  PASSWORD
-                </label>
+                <label className="font-headline text-[10px] sm:text-[11px] md:text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">PASSWORD</label>
                 <div className="relative">
                   <input
                     className="mt-1 w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md pr-10"
                     placeholder="••••••••"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     required
                     title="must be at least 8 characters with A-Z a-z letters, 0-9, and @$!%*#?& symbols"
                     pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$"
@@ -290,58 +373,57 @@ export function SignUp() {
                   </button>
                 </div>
               </div>
-
               <div className="flex items-start space-x-2 sm:space-x-3 pt-1">
                 <input
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
                   className="h-4 w-4 mt-0.5 cursor-pointer accent-[#660000]"
-                  required
                 />
                 <div className="text-on-surface-variant font-body text-[10px] sm:text-[11px] md:text-[12px] tracking-wide">
                   I agree to the{' '}
-                  <button
-                    type="button"
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-primary font-headline font-semibold underline underline-offset-4 hover:opacity-80"
-                  >
+                  <button type="button" onClick={() => setShowTermsModal(true)} className="text-primary font-headline font-semibold underline underline-offset-4 hover:opacity-80">
                     Terms and Conditions
                   </button>.
                 </div>
               </div>
-
-              <div className="pt-2 sm:pt-3">
+              <div className="pt-2 sm:pt-3 flex flex-col gap-3">
                 <button
                   type="submit"
-                  className="w-full bg-[#660000] py-3 sm:py-4 text-surface-container-lowest border-none cursor-pointer font-headline font-bold text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 text-center rounded-md"
+                  disabled={loading}
+                  className="w-full bg-[#660000] py-3 sm:py-4 text-surface-container-lowest border-none cursor-pointer font-headline font-bold text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 text-center rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Register
+                  {loading ? 'Creating Account...' : 'Register'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoogleSignUp}
+                  className="w-full border border-outline-variant/50 py-3 sm:py-4 text-on-surface font-headline font-semibold text-[11px] sm:text-xs tracking-widest uppercase hover:bg-surface-container-low transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 rounded-md"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  </svg>
+                  SIGN UP WITH GOOGLE
                 </button>
               </div>
-
               <div className="text-center mt-4 sm:mt-6">
-                <span className="text-on-surface-variant font-body text-[11px] sm:text-[12px] tracking-wide">
-                  Already have an account?{' '}
-                </span>
-                <Link to="/login" className="text-primary font-bold text-[11px] sm:text-[12px] hover:underline decoration-secondary-container underline-offset-4 transition-all">
-                  LOGIN
-                </Link>
+                <span className="text-on-surface-variant font-body text-[11px] sm:text-[12px] tracking-wide">Already have an account? </span>
+                <Link to="/login" className="text-primary font-bold text-[11px] sm:text-[12px] hover:underline decoration-secondary-container underline-offset-4 transition-all">LOGIN</Link>
               </div>
             </form>
           </div>
-          <div className="mt-8">
-              <Footer />
-            </div>
+          <div className="mt-8"><Footer /></div>
         </div>
       </main>
 
-      {/* TERMS MODAL */}
       {showTermsModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full max-h-[85vh] overflow-y-auto p-5 sm:p-6 md:p-8 space-y-4 shadow-xl mx-4">
             <h2 className="text-lg sm:text-xl font-bold">Terms & Conditions</h2>
-            <p className="text-sm"><strong>Park ‘n Spot</strong></p>
+            <p className="text-sm"><strong>Park 'n Spot</strong></p>
             <p className="text-xs text-gray-500">Last Updated: 09/04/2026</p>
             <div className="text-xs sm:text-sm font-headline space-y-3">
               <p><strong>1. Acceptance:</strong> By using the app, you agree to these Terms.</p>
@@ -361,23 +443,8 @@ export function SignUp() {
               <p><strong>10. Contact:</strong> park'ngo@gmail.com</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3">
-              <button
-                type="button"
-                onClick={() => setShowTermsModal(false)}
-                className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
-              >
-                Decline
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAcceptedTerms(true);
-                  setShowTermsModal(false);
-                }}
-                className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md text-center"
-              >
-                Accept
-              </button>
+              <button type="button" onClick={() => setShowTermsModal(false)} className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition">Decline</button>
+              <button type="button" onClick={() => { setAcceptedTerms(true); setShowTermsModal(false); }} className="font-headline text-[12px] tracking-widest text-white font-bold px-4 py-2 bg-[#660000] rounded-md uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-md text-center">Accept</button>
             </div>
           </div>
         </div>
@@ -386,60 +453,106 @@ export function SignUp() {
   );
 }
 
-
 export function Verify() {
   const navigate = useNavigate();
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
+
+  const handleResend = async () => {
+    setResendLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_URL}/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      setResendSent(true);
+    } catch {
+      setResendSent(true);
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className="bg-surface font-body text-on-surface h-screen flex flex-col">
       <header className="flex items-center gap-2 sm:gap-3 pt-5 sm:pt-6 md:pt-8 px-5 sm:px-8 md:px-12 lg:px-16">
-
-        <h1 className="font-headline font-black text-xl sm:text-2xl ml-8 tracking-tighter text-primary">Park ‘n Spot</h1>
+        <h1 className="font-headline font-black text-xl sm:text-2xl ml-8 tracking-tighter text-primary">Park 'n Spot</h1>
       </header>
-
       <main className="flex-grow flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-10">
         <div className="max-w-md w-full bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] p-5 sm:p-6 md:p-8 lg:p-10 relative overflow-hidden rounded-lg">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#660000]"></div>
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#660000]" />
           <div className="flex flex-col items-start gap-6 sm:gap-8">
-            <button
-              onClick={() => navigate('/signup')}
-              className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors duration-200 group border-none bg-transparent cursor-pointer"
-            >
+            <button onClick={() => navigate('/signup')} className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors duration-200 group border-none bg-transparent cursor-pointer">
               <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
               <span className="font-headline font-bold uppercase text-[9px] sm:text-[10px] tracking-widest">Back to Sign Up</span>
             </button>
-
             <div className="space-y-3 sm:space-y-4">
-              <div className="flex gap-3 sm:gap-4 items-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-surface-container-low flex items-center justify-center rounded-md">
-                  <Mail size={24} className="sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
-                </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-surface-container-low flex items-center justify-center rounded-md">
+                <Mail size={24} className="sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
               </div>
               <div className="space-y-3 sm:space-y-4">
-                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">
-                  Verify your<br />parking profile.
-                </h1>
-                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">
-                  We've sent a secure confirmation link to your email. Click the link to activate your premium parking access.
-                </p>
+                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">Verify your<br />parking profile.</h1>
+                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">We've sent a secure confirmation link to your email. Click the link to activate your account.</p>
               </div>
             </div>
-
-            <div className="w-full space-y-6 sm:space-y-8">
-              <div className="flex flex-col gap-2 sm:gap-3">
-                <p className="text-on-surface-variant/70 text-xs sm:text-sm font-medium tracking-wide font-body">
-                  Didn't receive the email?
-                </p>
-                <button className="text-primary font-headline font-bold flex items-center gap-2 hover:opacity-60 transition-opacity w-fit border-none bg-transparent cursor-pointer">
-                  <span className="tracking-tight uppercase text-[11px] sm:text-xs">Resend Link</span>
-                  <RefreshCw size={14} />
-                </button>
-              </div>
+            <div className="w-full space-y-4">
+              {resendSent ? (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
+                  <Mail size={16} className="text-green-700 shrink-0" />
+                  <p className="text-xs text-green-700 font-medium">Verification email resent! Check your inbox.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 sm:gap-3">
+                  <p className="text-on-surface-variant/70 text-xs sm:text-sm font-medium tracking-wide font-body">Didn't receive the email?</p>
+                  <button onClick={handleResend} disabled={resendLoading} className="text-primary font-headline font-bold flex items-center gap-2 hover:opacity-60 transition-opacity w-fit border-none bg-transparent cursor-pointer disabled:opacity-40">
+                    <span className="tracking-tight uppercase text-[11px] sm:text-xs">{resendLoading ? 'Sending...' : 'Resend Link'}</span>
+                    <RefreshCw size={14} className={resendLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+              )}
+              <button onClick={() => navigate('/explore')} className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant underline underline-offset-4 transition-colors font-body">
+                Skip for now (dev only)
+              </button>
             </div>
           </div>
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+export function AuthSuccess() {
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const name = params.get('name');
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('userName', name ?? '');
+      localStorage.setItem('isLoggedIn', 'true');
+      window.dispatchEvent(new Event('auth-change'));
+      navigate('/explore');
+    } else {
+      setError('Authentication failed. Please try again.');
+      setTimeout(() => navigate('/login'), 3000);
+    }
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen gap-4">
+      {error ? (
+        <p className="text-red-600 font-headline font-bold text-sm">{error}</p>
+      ) : (
+        <>
+          <div className="w-8 h-8 border-4 border-[#660000] border-t-transparent rounded-full animate-spin" />
+          <p className="font-headline font-bold uppercase tracking-widest text-sm text-primary animate-pulse">Authenticating with Google...</p>
+        </>
+      )}
     </div>
   );
 }
