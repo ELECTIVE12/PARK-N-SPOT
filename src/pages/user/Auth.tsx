@@ -19,6 +19,10 @@ export function Login() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -32,10 +36,10 @@ export function Login() {
       const data = await res.json();
       if (!res.ok) {
         if (data.googleAccount) {
-          setError('This account was created with Google. Please use "Log in with Google" below.');
-        } else {
-          setError(data.message || 'Login failed. Please try again.');
+          handleGoogleLogin();
+          return;
         }
+        setError(data.message || 'Login failed. Please try again.');
         return;
       }
       localStorage.setItem('token', data.token);
@@ -47,10 +51,6 @@ export function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
   };
 
   const handleForgotPassword = async () => {
@@ -534,7 +534,7 @@ export function AuthSuccess() {
       localStorage.setItem('token', token);
       localStorage.setItem('userName', name ?? '');
       localStorage.setItem('isLoggedIn', 'true');
-      window.location.href = '/explore'; // ✅ FIXED: forces full reload
+      window.location.href = '/explore';
     } else {
       setError('Authentication failed. Please try again.');
       setTimeout(() => { window.location.href = '/login'; }, 3000);
