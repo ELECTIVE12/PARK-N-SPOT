@@ -46,65 +46,21 @@ export default function Home() {
 
           <section className="xl:col-span-10 mx-auto space-y-6 sm:space-y-8 w-full">
 
-            <div className="relative rounded-2xl overflow-hidden w-full">
+            <div className="pt-24 px-6 sm:px-8 lg:px-10">
+              <div className="relative w-full h-[60vh] rounded-2xl overflow-hidden shadow-xl">
 
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url(${findparkgo})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  animation: isMobile
-                    ? 'bgMoveMobile 25s ease-in-out infinite alternate'
-                    : 'bgMove 20s ease-in-out infinite alternate',
-                }}
-              />
+                <div
+                  className="absolute inset-0 will-change-transform"
+                  style={{
+                    backgroundImage: `url(${findparkgo})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    animation: isMobile
+                      ? 'bgMoveMobile 25s ease-in-out infinite alternate'
+                      : 'bgMove 20s ease-in-out infinite alternate',
+                  }}
+                />
 
-              <div className="absolute inset-0 bg-black/60" />
-
-              {/* HERO CONTENT CENTERED */}
-              <div className="relative z-10 w-full h-full p-6 sm:p-8 lg:p-10 flex flex-col justify-start items-center text-center">
-
-                <header className="mb-10 sm:mb-12 lg:mb-16 w-full">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex flex-col gap-2 max-w-4xl mx-auto items-center text-center w-full"
-                  >
-                    <span className="text-white font-bold tracking-[0.2em] uppercase text-[10px]">
-                      Park ‘n Spot Dashboard
-                    </span>
-
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-white leading-tight">
-                      WHERE EVERY SPACE BECOMES A MOMENT OF CONVENIENCE
-                    </h1>
-                  </motion.div>
-                </header>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full justify-items-center">
-
-                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between items-center text-center text-white w-full">
-
-                    <div className="flex flex-col items-center w-full">
-                      <h3 className="text-lg sm:text-xl font-bold mb-2">
-                        Find Parking Near You
-                      </h3>
-
-                      <p className="text-white/80 text-xs sm:text-sm mb-6 max-w-[260px]">
-                        Real-time parking availability across Singapore.
-                      </p>
-
-                      <Link
-                        to="/explore"
-                        className="inline-flex items-center gap-2 bg-[#660000] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-[#7a0000] transition-all"
-                      >
-                        Open Map <ArrowRight size={14} />
-                      </Link>
-                    </div>
-
-                  </div>
-
-                </div>
               </div>
             </div>
 
