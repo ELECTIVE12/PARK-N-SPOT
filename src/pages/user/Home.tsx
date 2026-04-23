@@ -44,7 +44,8 @@ export default function Home() {
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start justify-center w-full">
 
-          <section className="xl:col-span-8 space-y-6 sm:space-y-8 w-full">
+          <section className="xl:col-span-12 space-y-6 sm:space-y-8 w-full">
+
             <div className="relative rounded-2xl overflow-hidden w-full">
 
               <div
@@ -67,7 +68,7 @@ export default function Home() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex flex-col gap-5 w-full items-start text-left pt-6 sm:pt-10" 
+                    className="flex flex-col gap-5 w-full items-start text-left pt-6 sm:pt-10"
                   >
 
                     <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/80">
@@ -83,8 +84,7 @@ export default function Home() {
                       <h3 className="text-lg sm:text-xl font-bold mb-2">
                         Find Parking Near You
                       </h3>
-
-                      <p className="text-white/80 text-xs sm:text-sm mb-4 max-w-[260px] whitespace-nowrap">
+                      <p className="text-white/80 text-xs sm:text-sm mb-4 whitespace-nowrap">
                         Real-time parking availability across Singapore.
                       </p>
 
