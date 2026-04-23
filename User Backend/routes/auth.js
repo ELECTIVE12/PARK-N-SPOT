@@ -36,6 +36,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'No account found with this email.' });
     }
 
+    // If account has a googleId, always redirect to Google
+    if (user.googleId) {
+      return res.status(401).json({
+        googleAccount: true,
+        message: 'This account uses Google Sign-In.'
+      });
+    }
+
     if (!(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -51,7 +59,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/me — get logged in user's profile
+// GET /api/auth/me
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -61,7 +69,7 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
-// PUT /api/auth/me — update logged in user's profile
+// PUT /api/auth/me
 router.put('/me', protect, async (req, res) => {
   try {
     const { name, username, email, mobile } = req.body;
@@ -109,7 +117,7 @@ router.put('/change-password', protect, async (req, res) => {
   }
 });
 
-// GET /api/auth/locations — get saved locations
+// GET /api/auth/locations
 router.get('/locations', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('savedLocations');
@@ -119,7 +127,7 @@ router.get('/locations', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/locations — add saved location
+// POST /api/auth/locations
 router.post('/locations', protect, async (req, res) => {
   try {
     const { name, info, icon } = req.body;
@@ -132,7 +140,7 @@ router.post('/locations', protect, async (req, res) => {
   }
 });
 
-// DELETE /api/auth/locations/:id — delete saved location
+// DELETE /api/auth/locations/:id
 router.delete('/locations/:id', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -146,7 +154,7 @@ router.delete('/locations/:id', protect, async (req, res) => {
   }
 });
 
-// GET /api/auth/history — get parking history
+// GET /api/auth/history
 router.get('/history', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('parkingHistory');
@@ -156,7 +164,7 @@ router.get('/history', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/history — add parking history
+// POST /api/auth/history
 router.post('/history', protect, async (req, res) => {
   try {
     const { name, duration, date, status } = req.body;
