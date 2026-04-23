@@ -57,7 +57,6 @@ export function AdminLogin() {
 
     setLoading(true);
 
-    // Simulate a small delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
@@ -108,7 +107,7 @@ export function AdminLogin() {
                   <input
                     className={`w-full bg-surface-container-high focus:ring-1 focus:ring-primary text-sm pl-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface outline-none ${errors.email && touched.email ? 'ring-1 ring-error' : ''}`}
                     id="email"
-                    placeholder="admin@gmail.com"
+                    placeholder="admin@parknspot.com"
                     type="email"
                     value={email}
                     onChange={handleEmailChange}
@@ -125,11 +124,9 @@ export function AdminLogin() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">
-                    Password
-                  </label>
-                </div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">
+                  Password
+                </label>
                 <div className="relative">
                   <Lock size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.password && touched.password ? 'text-error' : 'text-on-surface-variant'}`} />
                   <input

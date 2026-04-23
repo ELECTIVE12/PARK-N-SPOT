@@ -109,4 +109,64 @@ router.put('/change-password', protect, async (req, res) => {
   }
 });
 
+// GET /api/auth/locations — get saved locations
+router.get('/locations', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('savedLocations');
+    res.json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/locations — add saved location
+router.post('/locations', protect, async (req, res) => {
+  try {
+    const { name, info, icon } = req.body;
+    const user = await User.findById(req.user._id);
+    user.savedLocations.push({ name, info, icon });
+    await user.save();
+    res.status(201).json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/locations/:id — delete saved location
+router.delete('/locations/:id', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.savedLocations = user.savedLocations.filter(
+      loc => loc._id.toString() !== req.params.id
+    );
+    await user.save();
+    res.json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/auth/history — get parking history
+router.get('/history', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('parkingHistory');
+    res.json({ success: true, data: user.parkingHistory });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/history — add parking history
+router.post('/history', protect, async (req, res) => {
+  try {
+    const { name, duration, date, status } = req.body;
+    const user = await User.findById(req.user._id);
+    user.parkingHistory.unshift({ name, duration, date, status });
+    await user.save();
+    res.status(201).json({ success: true, data: user.parkingHistory });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

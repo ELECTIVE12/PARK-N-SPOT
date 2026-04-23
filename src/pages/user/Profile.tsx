@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, Home, Briefcase, Dumbbell, LogOut } from 'lucide-react';
+import { PlusCircle, Home, Briefcase, Dumbbell, LogOut, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { API_URL } from '../../lib/api';
 
 type UserData = {
   username: string;
@@ -10,10 +11,32 @@ type UserData = {
   mobile: string;
 };
 
+type SavedLocation = {
+  _id: string;
+  name: string;
+  info: string;
+  icon: string;
+};
+
+type ParkingHistory = {
+  _id: string;
+  name: string;
+  duration: string;
+  date: string;
+  status: string;
+};
+
+const iconMap: Record<string, React.ElementType> = {
+  Home,
+  Briefcase,
+  Dumbbell,
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = React.useState(false);
   const [showPasswordModal, setShowPasswordModal] = React.useState(false);
+  const [showAddLocationModal, setShowAddLocationModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -24,37 +47,49 @@ export default function Profile() {
     mobile: '',
   });
 
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+  const [parkingHistory, setParkingHistory] = useState<ParkingHistory[]>([]);
+  const [newLocation, setNewLocation] = useState({ name: '', info: '', icon: 'Home' });
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [retypePassword, setRetypePassword] = useState('');
 
-  // ✅ FIXED: checks both token AND isLoggedIn
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
 
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!token && !isLoggedIn) {
           navigate('/login');
           return;
         }
 
-        const res = await fetch('http://localhost:5000/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const [userRes, locRes, histRes] = await Promise.all([
+          fetch(`${API_URL}/api/auth/me`, { headers }),
+          fetch(`${API_URL}/api/auth/locations`, { headers }),
+          fetch(`${API_URL}/api/auth/history`, { headers }),
+        ]);
 
-        if (!res.ok) throw new Error('Failed to fetch user data');
+        const userData = await userRes.json();
+        const locData = await locRes.json();
+        const histData = await histRes.json();
 
-        const data = await res.json();
         setUserData({
-          username: data.username || '',
-          name: data.name || '',
-          email: data.email || '',
-          mobile: data.mobile || '',
+          username: userData.username || '',
+          name: userData.name || '',
+          email: userData.email || '',
+          mobile: userData.mobile || '',
         });
+
+        if (locData.success) setSavedLocations(locData.data);
+        if (histData.success) setParkingHistory(histData.data);
+
       } catch (err) {
         setError('Failed to load profile. Please try again.');
       } finally {
@@ -62,28 +97,17 @@ export default function Profile() {
       }
     };
 
-    fetchUser();
+    fetchAll();
   }, []);
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/me', {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          username: userData.username,
-          name: userData.name,
-          email: userData.email,
-          mobile: userData.mobile,
-        }),
+        headers,
+        body: JSON.stringify(userData),
       });
-
       if (!res.ok) throw new Error('Failed to update profile');
-
       const updated = await res.json();
       setUserData({
         username: updated.username || '',
@@ -91,7 +115,6 @@ export default function Profile() {
         email: updated.email || '',
         mobile: updated.mobile || '',
       });
-
       alert('Profile saved!');
       setIsEditing(false);
     } catch (err) {
@@ -105,19 +128,13 @@ export default function Profile() {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/change-password', {
+      const res = await fetch(`${API_URL}/api/auth/change-password`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to change password');
-
       alert('Password changed successfully!');
       setShowPasswordModal(false);
       setCurrentPassword('');
@@ -125,6 +142,37 @@ export default function Profile() {
       setRetypePassword('');
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const handleAddLocation = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/locations`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newLocation),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSavedLocations(data.data);
+        setNewLocation({ name: '', info: '', icon: 'Home' });
+        setShowAddLocationModal(false);
+      }
+    } catch (err) {
+      alert('Failed to add location.');
+    }
+  };
+
+  const handleDeleteLocation = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/locations/${id}`, {
+        method: 'DELETE',
+        headers,
+      });
+      const data = await res.json();
+      if (data.success) setSavedLocations(data.data);
+    } catch (err) {
+      alert('Failed to delete location.');
     }
   };
 
@@ -175,6 +223,7 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
+          {/* Personal Information */}
           <section className="bg-surface-container-low rounded-xl p-8 space-y-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#660000]"></div>
             <div className="flex items-center justify-between">
@@ -182,30 +231,14 @@ export default function Profile() {
               <div className="flex gap-3">
                 {isEditing ? (
                   <>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="text-sm font-semibold text-gray-500 hover:underline"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      className="text-sm font-bold text-primary-container hover:underline"
-                    >
-                      Save
-                    </button>
+                    <button onClick={() => setIsEditing(false)} className="text-sm font-semibold text-gray-500 hover:underline">Cancel</button>
+                    <button onClick={handleSave} className="text-sm font-bold text-primary-container hover:underline">Save</button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-sm font-bold text-primary-container hover:underline"
-                  >
-                    Edit Details
-                  </button>
+                  <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-primary-container hover:underline">Edit Details</button>
                 )}
               </div>
             </div>
-
             <div className="space-y-4">
               {[
                 { label: 'Username', key: 'username' as keyof UserData },
@@ -214,133 +247,132 @@ export default function Profile() {
                 { label: 'Mobile Number', key: 'mobile' as keyof UserData },
               ].map((field) => (
                 <div key={field.label} className="flex flex-col gap-1">
-                  <label className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                    {field.label}
-                  </label>
+                  <label className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">{field.label}</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={userData[field.key]}
-                      onChange={(e) =>
-                        setUserData((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
+                      onChange={(e) => setUserData((prev) => ({ ...prev, [field.key]: e.target.value }))}
                       className="bg-surface p-4 rounded-sm border outline-none"
                     />
                   ) : (
-                    <div className="bg-surface p-4 rounded-sm text-on-surface font-medium">
-                      {userData[field.key] || '—'}
-                    </div>
+                    <div className="bg-surface p-4 rounded-sm text-on-surface font-medium">{userData[field.key] || '—'}</div>
                   )}
                 </div>
               ))}
-
               <div className="flex flex-col gap-2">
-                <label className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Password
-                </label>
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="text-m font-semibold text-primary-container hover:underline w-fit"
-                >
-                  Change Password
-                </button>
+                <label className="font-headline text-[12px] uppercase tracking-widest text-on-surface-variant font-bold">Password</label>
+                <button onClick={() => setShowPasswordModal(true)} className="text-m font-semibold text-primary-container hover:underline w-fit">Change Password</button>
               </div>
             </div>
           </section>
 
+          {/* Change Password Modal */}
           {showPasswordModal && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl p-4 md:p-6 w-full max-w-md space-y-4">
                 <h3 className="text-lg font-bold text-[#330000]">Change Password</h3>
-                <input
-                  type="password"
-                  placeholder="Current Password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full p-3 border rounded-md outline-none"
-                />
-                <input
-                  type="password"
-                  placeholder="New Password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full p-3 border rounded-md outline-none"
-                />
-                <input
-                  type="password"
-                  placeholder="Re-type New Password"
-                  value={retypePassword}
-                  onChange={(e) => setRetypePassword(e.target.value)}
-                  className="w-full p-3 border rounded-md outline-none"
-                />
+                <input type="password" placeholder="Current Password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-3 border rounded-md outline-none" />
+                <input type="password" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-3 border rounded-md outline-none" />
+                <input type="password" placeholder="Re-type New Password" value={retypePassword} onChange={(e) => setRetypePassword(e.target.value)} className="w-full p-3 border rounded-md outline-none" />
                 <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    onClick={() => setShowPasswordModal(false)}
-                    className="px-4 py-2 text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleChangePassword}
-                    className="px-4 py-2 bg-[#660000] text-white rounded-md text-sm"
-                  >
-                    Save
-                  </button>
+                  <button onClick={() => setShowPasswordModal(false)} className="px-4 py-2 text-sm">Cancel</button>
+                  <button onClick={handleChangePassword} className="px-4 py-2 bg-[#660000] text-white rounded-md text-sm">Save</button>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Saved Locations */}
           <section className="bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Saved Locations</h2>
-              <PlusCircle size={24} className="text-primary-container cursor-pointer" />
+              <PlusCircle size={24} className="text-primary-container cursor-pointer" onClick={() => setShowAddLocationModal(true)} />
             </div>
             <div className="space-y-3">
-              {[
-                { name: 'The Penthouse', info: 'Level P1, Bay 14-B', icon: Home },
-                { name: 'Financial District', info: 'Level B3, Valet Priority', icon: Briefcase },
-                { name: 'Sovereign Spa', info: 'Surface Level, South Wing', icon: Dumbbell },
-              ].map((loc) => (
-                <div key={loc.name} className="bg-surface-container-lowest p-4 rounded-lg flex items-center gap-4 transition-all hover:scale-[1.02] cursor-pointer">
-                  <div className="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
-                    <loc.icon size={20} />
+              {savedLocations.length === 0 ? (
+                <p className="text-on-surface-variant text-sm italic">No saved locations yet.</p>
+              ) : savedLocations.map((loc) => {
+                const Icon = iconMap[loc.icon] || Home;
+                return (
+                  <div key={loc._id} className="bg-surface-container-lowest p-4 rounded-lg flex items-center gap-4 transition-all hover:scale-[1.02]">
+                    <div className="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+                      <Icon size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-on-surface">{loc.name}</h4>
+                      <p className="text-xs text-on-surface-variant">{loc.info}</p>
+                    </div>
+                    <button onClick={() => handleDeleteLocation(loc._id)} className="text-error hover:opacity-70">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-on-surface">{loc.name}</h4>
-                    <p className="text-xs text-on-surface-variant">{loc.info}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
+          {/* Add Location Modal */}
+          {showAddLocationModal && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-[#330000]">Add Location</h3>
+                  <button onClick={() => setShowAddLocationModal(false)}><X size={20} /></button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Location Name"
+                  value={newLocation.name}
+                  onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                  className="w-full p-3 border rounded-md outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Details (e.g. Level P1, Bay 14-B)"
+                  value={newLocation.info}
+                  onChange={(e) => setNewLocation({ ...newLocation, info: e.target.value })}
+                  className="w-full p-3 border rounded-md outline-none"
+                />
+                <select
+                  value={newLocation.icon}
+                  onChange={(e) => setNewLocation({ ...newLocation, icon: e.target.value })}
+                  className="w-full p-3 border rounded-md outline-none"
+                >
+                  <option value="Home">Home</option>
+                  <option value="Briefcase">Work</option>
+                  <option value="Dumbbell">Gym</option>
+                </select>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button onClick={() => setShowAddLocationModal(false)} className="px-4 py-2 text-sm">Cancel</button>
+                  <button onClick={handleAddLocation} className="px-4 py-2 bg-[#660000] text-white rounded-md text-sm">Add</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Parking History */}
           <section className="lg:col-span-2 bg-surface-container-low rounded-xl p-4 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-[#330000]">Parking History</h2>
-              <Link
-                to="/history"
-                className="px-6 py-2 bg-[#660000] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary-container transition-all"
-              >
+              <Link to="/history" className="px-6 py-2 bg-[#660000] text-white text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary-container transition-all">
                 View All History
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { name: 'Municipal Hall', time: '3 Hours 15 Minutes', date: 'April 17, 2026' },
-                { name: 'The White House', time: 'Overnight Stay', date: 'April 14, 2026' },
-                { name: 'Robinson', time: '1 Hour 40 Minutes', date: 'April 10, 2026' },
-              ].map((item) => (
-                <div key={item.name} className="bg-surface p-6 rounded-lg space-y-4">
+              {parkingHistory.length === 0 ? (
+                <p className="text-on-surface-variant text-sm italic">No parking history yet.</p>
+              ) : parkingHistory.slice(0, 3).map((item) => (
+                <div key={item._id} className="bg-surface p-6 rounded-lg space-y-4">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-bold uppercase tracking-widest py-1 px-2 bg-error/10 text-error rounded-full">
-                      Completed
+                      {item.status}
                     </span>
                     <span className="text-xs text-on-surface-variant font-medium">{item.date}</span>
                   </div>
                   <div>
                     <h4 className="font-headline font-bold text-lg">{item.name}</h4>
-                    <p className="text-xs text-on-surface-variant">{item.time}</p>
+                    <p className="text-xs text-on-surface-variant">{item.duration}</p>
                   </div>
                 </div>
               ))}
