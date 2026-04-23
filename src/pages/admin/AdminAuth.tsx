@@ -61,6 +61,7 @@ export function AdminLogin() {
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       localStorage.setItem('isAdminLoggedIn', 'true');
+      localStorage.setItem('adminToken', 'admin-authenticated'); // ← FIXED
       window.dispatchEvent(new Event('auth-change'));
       navigate('/admin/dashboard');
     } else {
