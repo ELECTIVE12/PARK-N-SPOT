@@ -4,7 +4,8 @@ import Logo from "../../components/Logo/logo.png";
 import { useNavigate } from 'react-router-dom';
 import { Lock, PersonStanding, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const ADMIN_EMAIL = 'admin@parknspot.com';
+const ADMIN_PASSWORD = 'Admin123!';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -55,34 +56,18 @@ export function AdminLogin() {
     if (emailError || passwordError) return;
 
     setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
 
-      if (!res.ok) {
-        setErrors(prev => ({ ...prev, general: data.message || 'Login failed' }));
-        return;
-      }
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Check if user is admin
-      if (data.data?.user?.role !== 'admin') {
-        setErrors(prev => ({ ...prev, general: 'Access denied. Admin accounts only.' }));
-        return;
-      }
-
-      localStorage.setItem('adminToken', data.data.token);
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       localStorage.setItem('isAdminLoggedIn', 'true');
       window.dispatchEvent(new Event('auth-change'));
       navigate('/admin/dashboard');
-    } catch {
-      setErrors(prev => ({ ...prev, general: 'Cannot connect to server.' }));
-    } finally {
-      setLoading(false);
+    } else {
+      setErrors(prev => ({ ...prev, general: 'Invalid email or password.' }));
     }
+
+    setLoading(false);
   };
 
   return (
@@ -105,7 +90,6 @@ export function AdminLogin() {
           <div className="bg-surface-container-lowest shadow-[0_12px_40px_rgba(27,28,25,0.06)] rounded-xl p-10 backdrop-blur-md border border-outline-variant/10">
             <h2 className="text-xl font-bold text-on-surface mb-8 font-headline">Admin Authorization</h2>
 
-            {/* General error */}
             {errors.general && (
               <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
                 <AlertCircle size={14} className="text-red-600 shrink-0" />
@@ -123,7 +107,7 @@ export function AdminLogin() {
                   <input
                     className={`w-full bg-surface-container-high focus:ring-1 focus:ring-primary text-sm pl-12 py-4 rounded-sm placeholder:text-on-surface-variant/40 transition-all font-body text-on-surface outline-none ${errors.email && touched.email ? 'ring-1 ring-error' : ''}`}
                     id="email"
-                    placeholder="admin@gmail.com"
+                    placeholder="admin@parknspot.com"
                     type="email"
                     value={email}
                     onChange={handleEmailChange}
@@ -140,11 +124,9 @@ export function AdminLogin() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">
-                    Password
-                  </label>
-                </div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant font-headline" htmlFor="password">
+                  Password
+                </label>
                 <div className="relative">
                   <Lock size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.password && touched.password ? 'text-error' : 'text-on-surface-variant'}`} />
                   <input
