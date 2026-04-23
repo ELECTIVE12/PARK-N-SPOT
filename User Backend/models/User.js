@@ -22,9 +22,14 @@ const userSchema = new mongoose.Schema({
   password: { type: String },
   googleId: { type: String },
   avatar: { type: String },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String },
+  verificationTokenExpires: { type: Date },
   savedLocations: [savedLocationSchema],
   parkingHistory: [parkingHistorySchema],
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 });
 
 // Hash password before saving
