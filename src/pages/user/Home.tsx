@@ -42,8 +42,11 @@ export default function Home() {
 
       <main className="flex-1 pt-24 sm:pt-28 pb-10 px-4 sm:px-6 md:px-10 xl:px-16 2xl:px-24 max-w-[1800px] mx-auto">
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start">
+          
           <section className="xl:col-span-8 space-y-6 sm:space-y-8">
+            
+            {/* HERO */}
             <div className="relative rounded-2xl overflow-hidden">
 
               <div
@@ -80,9 +83,9 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between text-white">
+                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between items-center text-center text-white">
 
-                    <div>
+                    <div className="flex flex-col items-center">
                       <h3 className="text-lg sm:text-xl font-bold mb-2">
                         Find Parking Near You
                       </h3>
@@ -104,29 +107,29 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="bg-surface-container-low p-6 sm:p-8 lg:p-10 rounded-2xl border">
 
-              <h3 className="text-lg font-bold uppercase mb-6">
+            <div className="bg-surface-container-low p-6 sm:p-8 lg:p-10 rounded-2xl border">
+              <h3 className="text-lg font-bold uppercase mb-6 text-center">
                 Smart Parking Insights
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-                <div className="p-4 bg-white rounded-xl">
+                <div className="p-4 bg-white rounded-xl text-center">
                   <p className="font-bold text-sm">Hotspots</p>
                   <p className="text-xs text-gray-500">
                     Orchard • Marina Bay • Bugis
                   </p>
                 </div>
 
-                <div className="p-4 bg-white rounded-xl">
+                <div className="p-4 bg-white rounded-xl text-center">
                   <p className="font-bold text-sm">Best Time</p>
                   <p className="text-xs text-gray-500">
                     10 AM – 12 PM
                   </p>
                 </div>
 
-                <div className="p-4 bg-white rounded-xl">
+                <div className="p-4 bg-white rounded-xl text-center">
                   <p className="font-bold text-sm">Tip</p>
                   <p className="text-xs text-gray-500">
                     Avoid 6–8 PM rush hour
@@ -134,8 +137,8 @@ export default function Home() {
                 </div>
 
               </div>
-
             </div>
+
             <div className="bg-surface-container-low rounded-2xl p-6 sm:p-8 lg:p-10 border">
 
               <div className="flex justify-between items-center mb-6">
@@ -145,19 +148,19 @@ export default function Home() {
                 <BarChart2 className="text-[#660000]" />
               </div>
 
-              <div className="grid grid-cols-3 text-center">
+              <div className="grid grid-cols-3 text-center items-center">
 
-                <div>
+                <div className="flex flex-col items-center justify-center">
                   <p className="text-2xl font-black">{available}</p>
                   <p className="text-xs uppercase">Available</p>
                 </div>
 
-                <div>
+                <div className="flex flex-col items-center justify-center">
                   <p className="text-2xl font-black">{occupied}</p>
                   <p className="text-xs uppercase">Occupied</p>
                 </div>
 
-                <div>
+                <div className="flex flex-col items-center justify-center">
                   <p className="text-2xl font-black text-[#660000]">7 PM</p>
                   <p className="text-xs uppercase">Peak</p>
                 </div>
@@ -173,36 +176,39 @@ export default function Home() {
 
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div className="bg-surface-container p-6 rounded-2xl">
+                <h3 className="text-xs uppercase font-bold mb-4 text-center">
+                  Prediction Insight
+                </h3>
+
+                <div className="flex items-center gap-3 mb-3">
+                  <AlertTriangle className="text-[#660000]" />
+                  <p className="text-sm">High congestion at 7 PM</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="text-[#660000]" />
+                  <p className="text-sm">Best time: 10 AM – 12 PM</p>
+                </div>
+              </div>
+
+              <div className="bg-[#660000] text-white p-6 rounded-2xl flex flex-col justify-center">
+                <h3 className="font-bold mb-2 text-center">System Status</h3>
+                <p className="text-sm mb-3 text-center">
+                  Singapore Smart Parking Network Online
+                </p>
+
+                <div className="flex items-center justify-center gap-2 text-xs font-bold">
+                  <ShieldCheck size={16} />
+                  Operational
+                </div>
+              </div>
+
+            </div>
+
           </section>
-          <aside className="xl:col-span-4 space-y-6">
-
-            <div className="bg-surface-container p-6 rounded-2xl">
-              <h3 className="text-xs uppercase font-bold mb-4">
-                Prediction Insight
-              </h3>
-
-              <div className="flex gap-3 mb-3">
-                <AlertTriangle className="text-[#660000]" />
-                <p className="text-sm">High congestion at 7 PM</p>
-              </div>
-
-              <div className="flex gap-3">
-                <TrendingUp className="text-[#660000]" />
-                <p className="text-sm">Best time: 10 AM – 12 PM</p>
-              </div>
-            </div>
-
-            <div className="bg-[#660000] text-white p-6 rounded-2xl">
-              <h3 className="font-bold mb-2">System Status</h3>
-              <p className="text-sm mb-3">Singapore Smart Parking Network Online</p>
-
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <ShieldCheck size={16} />
-                Operational
-              </div>
-            </div>
-
-          </aside>
 
         </div>
       </main>
