@@ -11,11 +11,26 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
-// ✅ FIXED: accepts any origin for hosting
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://parknspott.com',
+  'https://www.parknspott.com',
+  'https://park-n-spot.vercel.app',
+  /\.vercel\.app$/,
+];
+
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
