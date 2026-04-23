@@ -42,11 +42,9 @@ export default function Home() {
 
       <main className="flex-1 pt-24 sm:pt-28 pb-10 px-4 sm:px-6 md:px-10 xl:px-16 2xl:px-24 max-w-[1800px] mx-auto w-full">
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start w-full">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start justify-center w-full">
 
           <section className="xl:col-span-8 space-y-6 sm:space-y-8 w-full">
-
-            {/* HERO */}
             <div className="relative rounded-2xl overflow-hidden w-full">
 
               <div
