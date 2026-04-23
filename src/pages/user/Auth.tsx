@@ -526,6 +526,7 @@ export function Verify() {
               <button onClick={() => navigate('/explore')} className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant underline underline-offset-4 transition-colors font-body">
                 Skip for now (dev only)
               </button>
+              
             </div>
           </div>
         </div>
