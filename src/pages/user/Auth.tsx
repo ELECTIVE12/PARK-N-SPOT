@@ -18,6 +18,7 @@ export function Login() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`;
@@ -142,14 +143,24 @@ export function Login() {
                   Forgot Password?
                 </button>
               </div>
+              <div className="relative">
               <input
                 className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 sm:py-4 px-4 sm:px-5 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md"
                 placeholder="••••••••"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-primary"
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+              </div>
             </div>
 
             <div className="pt-2 sm:pt-3 flex flex-col gap-4 sm:gap-5 md:gap-6">
@@ -160,6 +171,7 @@ export function Login() {
               >
                 {loading ? 'Logging in...' : 'LOG IN'}
               </button>
+              
 
               <button
                 type="button"
