@@ -8,7 +8,7 @@ import History from './pages/user/History';
 import Report from './pages/user/Report';
 import Profile from './pages/user/Profile';
 import FacilityDetails from './pages/user/FacilityDetails';
-import { Login, SignUp, Verify, AuthSuccess } from './pages/user/Auth';
+import { Login, SignUp, Verify, AuthSuccess, ResetPassword } from './pages/user/Auth';
 import Dashboard from './pages/admin/Dashboard';
 import UsersPage from './pages/admin/Users';
 import Complaints from './pages/admin/Complaints';
@@ -38,7 +38,7 @@ function AppContent() {
     };
   }, []);
 
-  const isAuthPage = ['/login', '/signup', '/verify', '/auth-success'].includes(location.pathname);
+  const isAuthPage = ['/login', '/signup', '/verify', '/auth-success', '/reset-password'].includes(location.pathname);
   const isAdminPage = location.pathname.startsWith('/admin');
   const isLandingPage = location.pathname === '/';
   const shouldHideNav = isAuthPage || isLandingPage || isAdminPage;
@@ -77,6 +77,7 @@ function AppContent() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
