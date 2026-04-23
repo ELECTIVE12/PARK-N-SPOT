@@ -7,11 +7,13 @@ const router = express.Router();
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
+// POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
+
     const user = await User.create({ name, email, password });
     res.status(201).json({
       _id: user._id,
@@ -24,18 +26,14 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'No account found with this email.' });
 
-    // If account has a googleId, always redirect to Google regardless of password
-    if (user.googleId) {
-      return res.status(401).json({
-        googleAccount: true,
-        message: 'This account uses Google Sign-In.'
-      });
+    if (!user) {
+      return res.status(401).json({ message: 'No account found with this email.' });
     }
 
     if (!(await user.matchPassword(password))) {
@@ -53,34 +51,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
-
-    // If Google account, redirect to Google
-    if (user.googleId) {
-      return res.status(400).json({
-        googleAccount: true,
-        message: 'This account uses Google Sign-In. Please log in with Google.'
-      });
-    }
-
-    res.json({ message: 'If that email exists, a reset link has been sent.' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-router.post('/resend-verification', protect, async (req, res) => {
-  try {
-    res.json({ message: 'Verification email resent.' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
+// GET /api/auth/me — get logged in user's profile
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -90,9 +61,11 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+// PUT /api/auth/me — update logged in user's profile
 router.put('/me', protect, async (req, res) => {
   try {
     const { name, username, email, mobile } = req.body;
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -114,9 +87,11 @@ router.put('/me', protect, async (req, res) => {
   }
 });
 
+// PUT /api/auth/change-password
 router.put('/change-password', protect, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -129,6 +104,66 @@ router.put('/change-password', protect, async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password changed successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/auth/locations — get saved locations
+router.get('/locations', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('savedLocations');
+    res.json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/locations — add saved location
+router.post('/locations', protect, async (req, res) => {
+  try {
+    const { name, info, icon } = req.body;
+    const user = await User.findById(req.user._id);
+    user.savedLocations.push({ name, info, icon });
+    await user.save();
+    res.status(201).json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/auth/locations/:id — delete saved location
+router.delete('/locations/:id', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.savedLocations = user.savedLocations.filter(
+      loc => loc._id.toString() !== req.params.id
+    );
+    await user.save();
+    res.json({ success: true, data: user.savedLocations });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/auth/history — get parking history
+router.get('/history', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('parkingHistory');
+    res.json({ success: true, data: user.parkingHistory });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/auth/history — add parking history
+router.post('/history', protect, async (req, res) => {
+  try {
+    const { name, duration, date, status } = req.body;
+    const user = await User.findById(req.user._id);
+    user.parkingHistory.unshift({ name, duration, date, status });
+    await user.save();
+    res.status(201).json({ success: true, data: user.parkingHistory });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
