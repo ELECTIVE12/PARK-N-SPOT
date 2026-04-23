@@ -1,6 +1,19 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const savedLocationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  info: { type: String, default: '' },
+  icon: { type: String, default: 'Home' },
+});
+
+const parkingHistorySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  duration: { type: String, default: '' },
+  date: { type: String, default: '' },
+  status: { type: String, default: 'Completed' },
+});
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, default: '' },
@@ -9,8 +22,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String },
   googleId: { type: String },
   avatar: { type: String },
-  resetPasswordToken: { type: String },       // ← ADDED
-  resetPasswordExpires: { type: Date },        // ← ADDED
+  savedLocations: [savedLocationSchema],
+  parkingHistory: [parkingHistorySchema],
   createdAt: { type: Date, default: Date.now }
 });
 
