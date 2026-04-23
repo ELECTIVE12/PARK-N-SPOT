@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   MapPin, Navigation, CheckCircle2, Clock, Leaf,
   Shield, Car, X, ExternalLink, Locate, AlertCircle,
-  Route, ChevronRight,
+  Route, ChevronRight, RefreshCw,
 } from 'lucide-react';
 
 import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
@@ -24,31 +24,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-interface LatLng { lat: number; lng: number; }
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface FacilityInfo {
-  name: string;
-  location: string;
-  slots: string;
-  coords: LatLng;
-  address: string;
-}
+interface LatLng { lat: number; lng: number; }
 
 interface Carpark {
   carparkNumber: string;
+  area: string;
   development: string;
   location: LatLng;
   availableLots: number;
   lotType: string;
-  area: string;
+  agencyCode: string;
+  fetchedAt: string;
 }
 
-const facilityData: Record<string, FacilityInfo> = {
-  '1': { name: 'West Wing Pavilion', location: 'Marina Bay', slots: '84 / 120', coords: { lat: 1.2836, lng: 103.8607 }, address: 'Marina Bay Sands, 10 Bayfront Ave, Singapore 018956' },
-  '2': { name: 'Orchard Central Parking', location: 'Orchard Road', slots: 'Full', coords: { lat: 1.3007, lng: 103.8388 }, address: '181 Orchard Road, Orchard Central, Singapore 238896' },
-  '3': { name: 'Bugis Smart Park', location: 'Bugis District', slots: '32 / 120', coords: { lat: 1.3008, lng: 103.8559 }, address: '200 Victoria St, Bugis Junction, Singapore 188021' },
-  '4': { name: 'Downtown Core Garage', location: 'CBD Singapore', slots: '67 / 120', coords: { lat: 1.2816, lng: 103.8511 }, address: 'Raffles Place, Singapore 048616' },
-};
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 const makeIcon = (color: string) => new L.Icon({
   iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
@@ -63,14 +54,27 @@ const greenIcon = makeIcon('green');
 const yellowIcon = makeIcon('gold');
 const redIcon = makeIcon('red');
 
-const getCarparkIcon = (lots: number) => lots > 20 ? greenIcon : lots > 0 ? yellowIcon : redIcon;
+const getCarparkIcon = (lots: number) =>
+  lots > 20 ? greenIcon : lots > 0 ? yellowIcon : redIcon;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function haversineKm(a: LatLng, b: LatLng): number {
   const R = 6371;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) *
+    Math.cos((b.lat * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function getStatusLabel(lots: number) {
+  if (lots > 20) return { label: 'Available', color: 'text-green-600', bg: 'bg-green-50 border-green-200' };
+  if (lots > 0) return { label: 'Limited', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' };
+  return { label: 'Full', color: 'text-red-600', bg: 'bg-red-50 border-red-200' };
 }
 
 function FitBounds({ points }: { points: LatLng[] }) {
@@ -83,30 +87,26 @@ function FitBounds({ points }: { points: LatLng[] }) {
   return null;
 }
 
-function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClose: () => void }) {
+// ─── Navigation Modal ─────────────────────────────────────────────────────────
+
+function NavigationModal({
+  carpark,
+  allCarparks,
+  onClose,
+}: {
+  carpark: Carpark;
+  allCarparks: Carpark[];
+  onClose: () => void;
+}) {
   const [userPos, setUserPos] = useState<LatLng | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(true);
   const [routePoints, setRoutePoints] = useState<LatLng[]>([]);
-  const [nearbyCarparks, setNearbyCarparks] = useState<Carpark[]>([]);
-  const [loadingCarparks, setLoadingCarparks] = useState(true);
 
-  useEffect(() => {
-    const fetchCarparks = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/parking/availability');
-        const data = await res.json();
-        const all: Carpark[] = data.data ?? [];
-        const nearby = all.filter(cp => haversineKm(facility.coords, cp.location) <= 1.5);
-        setNearbyCarparks(nearby);
-      } catch {
-        // silently fail
-      } finally {
-        setLoadingCarparks(false);
-      }
-    };
-    fetchCarparks();
-  }, [facility]);
+  const nearbyCarparks = allCarparks.filter(cp =>
+    cp.carparkNumber !== carpark.carparkNumber &&
+    haversineKm(carpark.location, cp.location) <= 1.5
+  );
 
   const fetchRoute = async (from: LatLng, to: LatLng) => {
     try {
@@ -114,7 +114,9 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
       const res = await fetch(url);
       const data = await res.json();
       if (data.routes?.[0]) {
-        setRoutePoints(data.routes[0].geometry.coordinates.map(([lng, lat]: [number, number]) => ({ lat, lng })));
+        setRoutePoints(
+          data.routes[0].geometry.coordinates.map(([lng, lat]: [number, number]) => ({ lat, lng }))
+        );
       }
     } catch {
       setRoutePoints([from, to]);
@@ -132,7 +134,7 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserPos(p);
         setLocating(false);
-        fetchRoute(p, facility.coords);
+        fetchRoute(p, carpark.location);
       },
       (err) => {
         setGeoError(`Location access denied: ${err.message}`);
@@ -142,11 +144,12 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
     );
   }, []);
 
-  const distanceKm = userPos ? haversineKm(userPos, facility.coords) : null;
+  const distanceKm = userPos ? haversineKm(userPos, carpark.location) : null;
   const estMinutes = distanceKm ? Math.round((distanceKm / 30) * 60) : null;
+  const availableNearby = nearbyCarparks.filter(c => c.availableLots > 0).length;
 
   const openGoogleMaps = () => {
-    const dest = `${facility.coords.lat},${facility.coords.lng}`;
+    const dest = `${carpark.location.lat},${carpark.location.lng}`;
     const base = 'https://www.google.com/maps/dir/?api=1';
     const url = userPos
       ? `${base}&origin=${userPos.lat},${userPos.lng}&destination=${dest}&travelmode=driving`
@@ -159,9 +162,6 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
   const MapMarker = Marker as any;
   const MapPolyline = Polyline as any;
   const MapTooltip = Tooltip as any;
-
-  const availableNearby = nearbyCarparks.filter(c => c.availableLots > 0).length;
-  const totalNearby = nearbyCarparks.length;
 
   return (
     <motion.div
@@ -181,7 +181,7 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
             <Route size={18} className="text-white/80" />
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Navigate To</p>
-              <p className="text-white font-black text-base leading-tight">{facility.name}</p>
+              <p className="text-white font-black text-base leading-tight">{carpark.development}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white/60 hover:text-white transition p-1">
@@ -190,20 +190,18 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
         </div>
 
         {/* Stats bar */}
-        {!loadingCarparks && totalNearby > 0 && (
-          <div className="bg-[#7a0000] px-5 py-2 flex items-center gap-6 text-white text-xs flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-              <strong>{availableNearby}</strong> of <strong>{totalNearby}</strong> nearby carparks available
-            </span>
-            {distanceKm && (
-              <>
-                <span className="text-white/40">|</span>
-                <span>📍 {distanceKm.toFixed(1)} km away · ~{estMinutes} min by car</span>
-              </>
-            )}
-          </div>
-        )}
+        <div className="bg-[#7a0000] px-5 py-2 flex items-center gap-4 text-white text-xs flex-wrap">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+            <strong>{availableNearby}</strong> of <strong>{nearbyCarparks.length}</strong> nearby carparks available
+          </span>
+          {distanceKm && (
+            <>
+              <span className="text-white/40">|</span>
+              <span>📍 {distanceKm.toFixed(1)} km · ~{estMinutes} min by car</span>
+            </>
+          )}
+        </div>
 
         {/* Map */}
         <div className="w-full h-[320px] relative">
@@ -218,29 +216,27 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
             <div className="absolute inset-0 bg-amber-50 flex flex-col items-center justify-center gap-2 z-10 px-6 text-center">
               <AlertCircle size={28} className="text-amber-500" />
               <p className="text-xs font-bold text-gray-700">Location access was denied</p>
-              <p className="text-[10px] text-gray-500">Enable location in your browser settings, or use Google Maps below.</p>
+              <p className="text-[10px] text-gray-500">Enable location in browser settings, or use Google Maps below.</p>
             </div>
           )}
 
           {!locating && (
             <Map
-              center={[facility.coords.lat, facility.coords.lng]}
+              center={[carpark.location.lat, carpark.location.lng]}
               zoom={15}
               scrollWheelZoom={true}
               className="w-full h-full"
-              zoomControl={true}
             >
-              <MapTile
-                attribution="&copy; OpenStreetMap"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <MapTile attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-              <MapMarker position={[facility.coords.lat, facility.coords.lng]} icon={destinationIcon}>
+              {/* Destination */}
+              <MapMarker position={[carpark.location.lat, carpark.location.lng]} icon={destinationIcon}>
                 <MapTooltip permanent direction="top" offset={[0, -10]}>
-                  <span className="text-xs font-bold">🅿 {facility.name}</span>
+                  <span className="text-xs font-bold">🅿 {carpark.development}</span>
                 </MapTooltip>
               </MapMarker>
 
+              {/* User */}
               {userPos && (
                 <MapMarker position={[userPos.lat, userPos.lng]} icon={userIcon}>
                   <MapTooltip permanent direction="top" offset={[0, -10]}>
@@ -249,16 +245,15 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
                 </MapMarker>
               )}
 
+              {/* Route */}
               {userPos && routePoints.length > 0 && (
                 <MapPolyline
                   positions={routePoints.map(p => [p.lat, p.lng])}
-                  color="#660000"
-                  weight={5}
-                  opacity={0.85}
-                  dashArray="10,5"
+                  color="#660000" weight={5} opacity={0.85} dashArray="10,5"
                 />
               )}
 
+              {/* Nearby carparks */}
               {nearbyCarparks.map((cp, i) => (
                 <MapMarker
                   key={`${cp.carparkNumber}-${i}`}
@@ -271,23 +266,21 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
                       <p className={cp.availableLots > 20 ? 'text-green-700 font-bold' : cp.availableLots > 0 ? 'text-yellow-600 font-bold' : 'text-red-600 font-bold'}>
                         {cp.availableLots > 0 ? `${cp.availableLots} slots available` : 'Full'}
                       </p>
-                      <p className="text-gray-400">{haversineKm(facility.coords, cp.location).toFixed(2)} km from destination</p>
+                      <p className="text-gray-400">{haversineKm(carpark.location, cp.location).toFixed(2)} km away</p>
                     </div>
                   </MapTooltip>
                 </MapMarker>
               ))}
 
-              {userPos && <FitBounds points={[userPos, facility.coords]} />}
+              {userPos && <FitBounds points={[userPos, carpark.location]} />}
             </Map>
           )}
         </div>
 
-        {/* Info strip */}
-        <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <MapPin size={13} className="text-[#660000]" />
-            {facility.address}
-          </div>
+        {/* Info */}
+        <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+          <MapPin size={13} className="text-[#660000]" />
+          {carpark.area} · Carpark {carpark.carparkNumber} · Type: {carpark.lotType}
         </div>
 
         {/* Legend */}
@@ -320,36 +313,131 @@ function NavigationModal({ facility, onClose }: { facility: FacilityInfo; onClos
   );
 }
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export default function FacilityDetails() {
   const { id } = useParams();
+  const [carpark, setCarpark] = useState<Carpark | null>(null);
+  const [allCarparks, setAllCarparks] = useState<Carpark[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [showNav, setShowNav] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
-  const current: FacilityInfo = facilityData[id as string] || facilityData['1'];
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('http://localhost:5000/api/parking/availability');
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      const all: Carpark[] = data.data ?? [];
+      setAllCarparks(all);
+      const found = all.find(cp => cp.carparkNumber === id);
+      if (found) {
+        setCarpark(found);
+        setLastUpdated(new Date(found.fetchedAt).toLocaleTimeString());
+      } else {
+        setError(`Carpark "${id}" not found in live data.`);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 60_000);
+    return () => clearInterval(interval);
+  }, [id]);
+
+  const status = carpark ? getStatusLabel(carpark.availableLots) : null;
+
+  // ── Loading ──
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f9fafb] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-[#660000] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Loading facility data…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error ──
+  if (error || !carpark) {
+    return (
+      <div className="min-h-screen bg-[#f9fafb] flex items-center justify-center px-6">
+        <div className="text-center space-y-4">
+          <AlertCircle size={40} className="text-red-500 mx-auto" />
+          <p className="font-bold text-gray-800">Could not load facility</p>
+          <p className="text-sm text-gray-500">{error}</p>
+          <button
+            onClick={fetchData}
+            className="bg-[#660000] text-white px-5 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest hover:bg-[#7a0000] transition"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main ──
   return (
     <div className="pt-24 pb-20 px-4 sm:px-6 md:px-12 lg:px-24 max-w-[1800px] mx-auto min-h-screen bg-[#f9fafb]">
 
+      {/* Hero */}
       <div className="mb-12">
         <div className="relative w-full h-[420px] rounded-2xl overflow-hidden shadow-xl">
-          <div className="absolute inset-0" style={{ backgroundImage: `url(${findparkgo})`, backgroundSize: 'cover', backgroundPosition: 'center', animation: 'bgMove 20s ease-in-out infinite alternate' }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${findparkgo})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              animation: 'bgMove 20s ease-in-out infinite alternate',
+            }}
+          />
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 h-full flex items-center px-6 sm:px-10 text-white">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl">
               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/80">Park 'n Spot Facility Details</span>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight mt-2">WHERE EVERY SPACE BECOMES A MOMENT OF CONVENIENCE</h1>
-              <p className="text-white/70 mt-4 text-sm sm:text-base max-w-xl">View real-time parking insights, availability, and smart infrastructure details across the city network.</p>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight mt-2">
+                WHERE EVERY SPACE BECOMES A MOMENT OF CONVENIENCE
+              </h1>
+              <p className="text-white/70 mt-4 text-sm sm:text-base max-w-xl">
+                Real-time parking insights and smart infrastructure details.
+              </p>
             </motion.div>
           </div>
         </div>
       </div>
 
+      {/* Title */}
       <div className="mb-10">
         <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-3">
-          Parking Facilities / <span className="text-[#660000]">Facility {id}</span>
+          Parking Facilities / <span className="text-[#660000]">Carpark {id}</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-tight">{current.name}</h1>
-        <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl">Premium smart parking infrastructure with real-time slot tracking and secure monitoring systems.</p>
+
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-tight">
+              {carpark.development}
+            </h1>
+            <p className="mt-2 text-sm text-gray-500">{carpark.area} · Type: {carpark.lotType} · Agency: {carpark.agencyCode}</p>
+          </div>
+
+          {/* Live badge */}
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold ${status!.bg} ${status!.color}`}>
+            <span className="w-2 h-2 rounded-full bg-current animate-pulse inline-block" />
+            {status!.label} · Updated {lastUpdated}
+          </div>
+        </div>
 
         <div className="flex gap-3 mt-6">
           <button
@@ -365,9 +453,17 @@ export default function FacilityDetails() {
           >
             {saved ? 'Saved ✓' : '★ Save'}
           </button>
+          <button
+            onClick={fetchData}
+            className="px-5 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest transition border border-gray-300 hover:bg-gray-100 flex items-center gap-2"
+          >
+            <RefreshCw size={13} />
+            Refresh
+          </button>
         </div>
       </div>
 
+      {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="bg-white border rounded-xl p-5 hover:shadow-md transition">
           <Shield className="text-[#660000] mb-3" />
@@ -386,62 +482,113 @@ export default function FacilityDetails() {
         </div>
       </div>
 
+      {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* Live Availability */}
         <div className="lg:col-span-4 bg-white border rounded-2xl p-6 relative overflow-hidden">
           <div className="absolute left-0 top-0 w-1 h-full bg-[#660000]" />
           <h3 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-8">Live Availability</h3>
-          <div className="text-5xl font-black text-gray-900">{current.slots}</div>
-          <p className="text-[#660000] font-semibold mt-2 text-sm">Available Slots</p>
-          <div className="flex items-center gap-2 mt-6 text-sm font-semibold">
-            <CheckCircle2 className="text-[#660000]" size={18} />
-            Operational
+          <div className={`text-6xl font-black ${status!.color}`}>
+            {carpark.availableLots}
           </div>
+          <p className="text-gray-500 font-semibold mt-2 text-sm">Available Slots</p>
+          <div className={`inline-flex items-center gap-2 mt-4 px-3 py-1.5 rounded-full text-xs font-bold border ${status!.bg} ${status!.color}`}>
+            <CheckCircle2 size={14} />
+            {status!.label}
+          </div>
+          <p className="text-[10px] text-gray-400 mt-4">Last updated: {lastUpdated}</p>
         </div>
 
+        {/* Usage Overview — visual bar chart */}
         <div className="lg:col-span-8 bg-white border rounded-2xl p-6">
           <h3 className="font-bold text-lg mb-4">Parking Usage Overview</h3>
           <div className="flex items-end gap-1 h-[260px]">
             {[20, 35, 60, 85, 95, 80, 50, 40, 65, 75, 45, 25].map((h, i) => (
-              <div key={i} className="flex-1 bg-[#660000]/10 hover:bg-[#660000] transition rounded-t-sm" style={{ height: `${h}%` }} />
+              <div
+                key={i}
+                className="flex-1 bg-[#660000]/10 hover:bg-[#660000] transition rounded-t-sm cursor-pointer"
+                style={{ height: `${h}%` }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-[10px] text-gray-400 mt-2 px-1">
+            {['6am','7am','8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm'].map(t => (
+              <span key={t}>{t}</span>
             ))}
           </div>
         </div>
 
+        {/* Peak Hours */}
         <div className="lg:col-span-5 bg-white border rounded-2xl p-6">
           <h3 className="font-bold mb-5">Peak Hours</h3>
           <div className="space-y-5">
             <div className="flex gap-3">
               <Clock className="text-[#660000]" />
-              <div><p className="font-bold">Morning</p><p className="text-sm text-gray-500">Higher parking demand</p></div>
+              <div>
+                <p className="font-bold">Morning (8am – 10am)</p>
+                <p className="text-sm text-gray-500">Higher parking demand</p>
+              </div>
             </div>
             <div className="flex gap-3">
               <Leaf className="text-green-600" />
-              <div><p className="font-bold">Off Peak</p><p className="text-sm text-gray-500">Better availability</p></div>
+              <div>
+                <p className="font-bold">Off Peak (2pm – 4pm)</p>
+                <p className="text-sm text-gray-500">Better availability</p>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Map thumbnail */}
         <div className="lg:col-span-7 bg-white border rounded-2xl overflow-hidden">
-          <img src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200" className="w-full h-[260px] object-cover" alt="facility" />
+          <div className="w-full h-[260px]">
+            <MapContainer
+              center={[carpark.location.lat, carpark.location.lng]}
+              zoom={16}
+              scrollWheelZoom={false}
+              zoomControl={false}
+              className="w-full h-full"
+              dragging={false}
+            >
+              <TileLayer
+                attribution="&copy; OpenStreetMap"
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker
+                position={[carpark.location.lat, carpark.location.lng]}
+                icon={destinationIcon}
+              />
+            </MapContainer>
+          </div>
           <div className="bg-[#660000] text-white p-4 flex items-center gap-2 text-sm">
             <MapPin size={14} />
-            {current.location} • Facility {id}
+            {carpark.area} · Carpark {carpark.carparkNumber}
           </div>
         </div>
+
       </div>
 
+      {/* Facility Visuals */}
       <div className="mt-12">
         <h2 className="text-lg font-bold mb-4">Facility Visuals</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800" alt="" />
-          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1494526585095-c41746248156?w=800" alt="" />
-          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800" alt="" />
-          <img className="rounded-xl h-32 object-cover" src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=800" alt="" />
+          <img className="rounded-xl h-32 w-full object-cover" src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800" alt="" />
+          <img className="rounded-xl h-32 w-full object-cover" src="https://images.unsplash.com/photo-1494526585095-c41746248156?w=800" alt="" />
+          <img className="rounded-xl h-32 w-full object-cover" src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800" alt="" />
+          <img className="rounded-xl h-32 w-full object-cover" src="https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=800" alt="" />
         </div>
       </div>
 
+      {/* Navigation Modal */}
       <AnimatePresence>
-        {showNav && <NavigationModal facility={current} onClose={() => setShowNav(false)} />}
+        {showNav && (
+          <NavigationModal
+            carpark={carpark}
+            allCarparks={allCarparks}
+            onClose={() => setShowNav(false)}
+          />
+        )}
       </AnimatePresence>
 
       <style>{`
