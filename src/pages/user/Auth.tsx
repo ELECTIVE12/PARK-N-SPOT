@@ -566,3 +566,121 @@ export function AuthSuccess() {
     </div>
   );
 }
+// ─────────────────────────────────────────
+// Reset Password Page
+// ─────────────────────────────────────────
+export function ResetPassword() {
+  const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const token = new URLSearchParams(window.location.search).get('token') || '';
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    setLoading(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.message || 'Reset failed. Please try again.'); return; }
+      setSuccess(true);
+    } catch {
+      setError('Cannot connect to server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!token) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4 p-8">
+        <p className="text-red-600 font-headline font-bold text-sm text-center">Invalid or missing reset link. Please request a new one.</p>
+        <button onClick={() => navigate('/login')} className="font-headline text-xs uppercase tracking-widest text-primary underline">Back to Login</button>
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen w-full flex items-center justify-center bg-surface p-6">
+      <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-8 space-y-6">
+        <div>
+          <h1 className="font-headline font-black text-xl tracking-tighter text-primary mb-1">Park 'n Spot</h1>
+          <h2 className="font-headline text-3xl font-extrabold text-primary tracking-tight">New Password</h2>
+          <p className="text-xs text-on-surface-variant mt-2">Choose a strong password for your account.</p>
+        </div>
+
+        {success ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
+              <Mail size={18} className="text-green-700 shrink-0" />
+              <p className="text-xs text-green-700 font-medium">Password reset successfully! You can now log in.</p>
+            </div>
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full bg-[#660000] py-3 text-white font-headline font-bold text-xs tracking-widest uppercase rounded-md hover:bg-primary-container transition"
+            >
+              Go to Login
+            </button>
+          </div>
+        ) : (
+          <form className="space-y-4" onSubmit={handleReset}>
+            {error && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="font-headline text-[11px] uppercase tracking-widest text-on-surface-variant font-bold">New Password</label>
+              <div className="relative">
+                <input
+                  className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 px-4 text-sm rounded-md placeholder:text-outline/50"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 8 characters"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="font-headline text-[11px] uppercase tracking-widest text-on-surface-variant font-bold">Confirm Password</label>
+              <input
+                className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 px-4 text-sm rounded-md placeholder:text-outline/50"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Repeat your password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#660000] py-3 text-white font-headline font-bold text-xs tracking-widest uppercase rounded-md hover:bg-primary-container transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </button>
+            <button type="button" onClick={() => navigate('/login')} className="w-full text-center font-headline text-[10px] uppercase tracking-widest text-on-surface-variant hover:text-primary transition">
+              Back to Login
+            </button>
+          </form>
+        )}
+      </div>
+    </main>
+  );
+}

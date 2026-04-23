@@ -17,6 +17,7 @@ const app = express();
 app.use(cors({ 
   origin: [
     'https://parknspott.com',
+    'https://www.parknspott.com',
     'http://localhost:5173',
     'http://localhost:3000'
   ], 

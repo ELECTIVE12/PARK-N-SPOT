@@ -4,8 +4,7 @@ import Logo from "../../components/Logo/logo.png";
 import { useNavigate } from 'react-router-dom';
 import { Lock, PersonStanding, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const ADMIN_EMAIL = 'admin@parknspot.com';
-const ADMIN_PASSWORD = 'Admin123!';
+const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://incredible-adventure-production.up.railway.app';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -57,15 +56,24 @@ export function AdminLogin() {
 
     setLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const res = await fetch(`${ADMIN_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      localStorage.setItem('isAdminLoggedIn', 'true');
-      localStorage.setItem('adminToken', 'admin-authenticated'); // ← FIXED
-      window.dispatchEvent(new Event('auth-change'));
-      navigate('/admin/dashboard');
-    } else {
-      setErrors(prev => ({ ...prev, general: 'Invalid email or password.' }));
+      if (data.success && data.data?.token) {
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('adminToken', data.data.token);
+        window.dispatchEvent(new Event('auth-change'));
+        navigate('/admin/dashboard');
+      } else {
+        setErrors(prev => ({ ...prev, general: data.message || 'Invalid email or password.' }));
+      }
+    } catch {
+      setErrors(prev => ({ ...prev, general: 'Cannot connect to server.' }));
     }
 
     setLoading(false);
