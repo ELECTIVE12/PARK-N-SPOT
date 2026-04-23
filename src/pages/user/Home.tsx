@@ -43,9 +43,9 @@ export default function Home() {
       <main className="flex-1 pt-24 sm:pt-28 pb-10 px-4 sm:px-6 md:px-10 xl:px-16 2xl:px-24 max-w-[1800px] mx-auto">
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start">
-          
+
           <section className="xl:col-span-8 space-y-6 sm:space-y-8">
-            
+
             {/* HERO */}
             <div className="relative rounded-2xl overflow-hidden">
 
@@ -63,7 +63,7 @@ export default function Home() {
 
               <div className="absolute inset-0 bg-black/60" />
 
-              <div className="relative z-10 p-6 sm:p-8 lg:p-10">
+              <div className="relative z-10 w-full h-full p-6 sm:p-8 lg:p-10 flex flex-col justify-start items-start text-left">
 
                 <header className="mb-10 sm:mb-12 lg:mb-16">
                   <motion.div
@@ -83,9 +83,9 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between items-center text-center text-white">
+                  <div className="p-6 sm:p-8 lg:p-10 rounded-2xl min-h-[220px] flex flex-col justify-between items-start text-left text-white">
 
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-start">
                       <h3 className="text-lg sm:text-xl font-bold mb-2">
                         Find Parking Near You
                       </h3>
@@ -138,10 +138,9 @@ export default function Home() {
 
               </div>
             </div>
+            <div className="bg-surface-container-low rounded-2xl p-6 sm:p-8 lg:p-10 border text-center">
 
-            <div className="bg-surface-container-low rounded-2xl p-6 sm:p-8 lg:p-10 border">
-
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-center items-center mb-6 gap-2">
                 <h3 className="text-lg font-bold uppercase">
                   Live Parking Overview
                 </h3>
