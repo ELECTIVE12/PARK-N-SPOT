@@ -54,12 +54,12 @@ function UsersScreen() {
 
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
-    await fetch(`${API_URL}/api/users/${id}`, { method: 'DELETE', headers });
+    await fetch(`${ADMIN_API_URL}/api/users/${id}`, { method: 'DELETE', headers });
     fetchUsers();
   };
 
   const handleToggleStatus = async (id: string) => {
-    await fetch(`${API_URL}/api/users/${id}/toggle-status`, { method: 'PATCH', headers });
+    await fetch(`${ADMIN_API_URL}/api/users/${id}/toggle-status`, { method: 'PATCH', headers });
     fetchUsers();
   };
 
@@ -71,7 +71,7 @@ function UsersScreen() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-    await fetch(`${API_URL}/api/users/${editingUser._id}`, {
+    await fetch(`${ADMIN_API_URL}/api/users/${editingUser._id}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(editForm),
@@ -195,6 +195,10 @@ function UsersScreen() {
                 <p className="text-xs text-on-surface-variant/60 mt-2">
                   Make sure the Admin backend is running on port 5001.
                 </p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="p-20 text-center">
+                <p className="text-on-surface-variant font-medium italic">No users found.</p>
               </div>
             ) : (
               <table className="w-full text-left border-collapse min-w-[600px]">

@@ -14,6 +14,14 @@ const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Handle hardcoded admin
+    if (decoded.id === 'admin') {
+      req.user = { id: 'admin', name: 'Admin', email: 'admin@parknspot.com', role: 'admin' };
+      return next();
+    }
+
+    // Regular DB user
     const user = await User.findById(decoded.id);
 
     if (!user) {
