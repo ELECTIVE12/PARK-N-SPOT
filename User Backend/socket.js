@@ -2,10 +2,11 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 
 let io = null;
+const DEFAULT_CLIENT_URL = 'https://parknspott.com';
 
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true },
+    cors: { origin: process.env.CLIENT_URL || DEFAULT_CLIENT_URL, credentials: true },
   });
 
   io.use((socket, next) => {
