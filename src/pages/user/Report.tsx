@@ -1,7 +1,6 @@
 import React from 'react';
 import { CheckCircle2, ChevronDown } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../lib/api';
 
 export default function Report() {
   const [submitted, setSubmitted] = React.useState(false);
