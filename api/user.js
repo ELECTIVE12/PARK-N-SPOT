@@ -55,14 +55,15 @@ export default async function handler(req, res) {
     return;
   }
 
-  const pathSegments = Array.isArray(req.query.path)
-    ? req.query.path
-    : req.query.path
-      ? [req.query.path]
+  const rawPath = req.query.path;
+  const pathSegments = Array.isArray(rawPath)
+    ? rawPath
+    : rawPath
+      ? [rawPath]
       : [];
 
   const targetPath = pathSegments.join('/');
-  const targetUrl = `${backendBaseUrl}/${targetPath}${buildQueryString(req.query)}`;
+  const targetUrl = `${backendBaseUrl}${targetPath ? `/${targetPath}` : ''}${buildQueryString(req.query)}`;
   const requestBody = await readRequestBody(req);
 
   const forwardedHeaders = { ...req.headers };

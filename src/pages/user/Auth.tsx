@@ -15,7 +15,9 @@ async function parseApiPayload(res: Response) {
   }
 
   const text = await res.text();
-  return { message: text || `${res.status} ${res.statusText}` };
+  // Strip HTML tags for cleaner error display
+  const stripped = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  return { message: stripped || `${res.status} ${res.statusText}` };
 }
 
 export function Login() {
@@ -60,6 +62,10 @@ export function Login() {
       });
       const data = await parseApiPayload(res);
       if (!res.ok) {
+        if (res.status === 405) {
+          setError('Server error (405): The API endpoint is not reachable. Please check deployment configuration.');
+          return;
+        }
         if (data.googleAccount) {
           setError(
             data.message ||
@@ -67,12 +73,13 @@ export function Login() {
           );
           return;
         }
-        setError(data.message || 'Login failed. Please try again.');
+        setError(data.message || `Login failed (${res.status}). Please try again.`);
         return;
       }
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
+      window.dispatchEvent(new Event('auth-change'));
       window.location.href = '/explore';
     } catch {
       setError('Cannot reach the authentication server. Please try again in a moment.');
@@ -640,26 +647,40 @@ export function Verify() {
 
 export function AuthSuccess() {
   const [error, setError] = useState('');
+  const [status, setStatus] = useState('processing');
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const name = params.get('name');
+    const errorParam = params.get('error');
+
+    if (errorParam) {
+      setError(`Authentication failed: ${errorParam}. Please try again.`);
+      setStatus('error');
+      setTimeout(() => { window.location.href = '/login'; }, 3000);
+      return;
+    }
 
     if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('userName', name ?? '');
       localStorage.setItem('isLoggedIn', 'true');
-      window.location.href = '/explore';
+      window.dispatchEvent(new Event('auth-change'));
+      // Small delay to ensure localStorage is committed before navigation
+      setTimeout(() => {
+        window.location.href = '/explore';
+      }, 50);
     } else {
       setError('Authentication failed. Please try again.');
+      setStatus('error');
       setTimeout(() => { window.location.href = '/login'; }, 3000);
     }
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-4">
-      {error ? (
+      {status === 'error' ? (
         <p className="text-red-600 font-headline font-bold text-sm">{error}</p>
       ) : (
         <>

@@ -1,6 +1,8 @@
 {
   "version": 2,
   "routes": [
+    { "src": "/api/user", "dest": "/api/user.js" },
+    { "src": "/api/user/(.*)", "dest": "/api/user.js?path=$1" },
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
   ]
