@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../lib/api';
 
-import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 import findparkgo from "../../components/images/findparkgo.png";
@@ -39,12 +39,27 @@ interface Carpark {
 
 type MarkerColor = 'green' | 'gold' | 'red';
 
+const SINGAPORE_CENTER: [number, number] = [1.3521, 103.8198];
+
+const createMarkerSvg = (fillColor: string) =>
+  `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 10.105 12.5 28.5 12.5 28.5S25 22.605 25 12.5C25 5.596 19.404 0 12.5 0z" fill="${fillColor}" stroke="#5b0b0b" stroke-width="1.5"/>
+      <circle cx="12.5" cy="12.5" r="5" fill="white"/>
+    </svg>
+  `)}`;
+
 const createIcon = (color: MarkerColor) =>
   new L.Icon({
-    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+    iconUrl: createMarkerSvg(
+      color === 'green' ? '#16a34a' : color === 'gold' ? '#eab308' : '#dc2626'
+    ),
     shadowUrl: markerShadow,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [12, -28],
+    shadowSize: [41, 41],
   });
 
 const getStatusLabel = (lots: number): string => {
@@ -59,6 +74,57 @@ const getMarkerColor = (lots: number): MarkerColor => {
   return 'red';
 };
 
+const availableIcon = createIcon('green');
+const limitedIcon = createIcon('gold');
+const fullIcon = createIcon('red');
+
+const getMarkerIcon = (lots: number) => {
+  if (lots > 20) return availableIcon;
+  if (lots > 0) return limitedIcon;
+  return fullIcon;
+};
+
+const isValidLocation = (location: CarparkLocation | undefined) =>
+  Boolean(
+    location &&
+      Number.isFinite(location.lat) &&
+      Number.isFinite(location.lng) &&
+      Math.abs(location.lat) <= 90 &&
+      Math.abs(location.lng) <= 180
+  );
+
+function MapViewportController({ points }: { points: CarparkLocation[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const updateMapSize = () => map.invalidateSize();
+
+    updateMapSize();
+    window.addEventListener('resize', updateMapSize);
+
+    return () => window.removeEventListener('resize', updateMapSize);
+  }, [map]);
+
+  useEffect(() => {
+    if (points.length === 0) {
+      map.setView(SINGAPORE_CENTER, 11);
+      return;
+    }
+
+    if (points.length === 1) {
+      map.setView([points[0].lat, points[0].lng], 15);
+      return;
+    }
+
+    map.fitBounds(
+      L.latLngBounds(points.map((point) => [point.lat, point.lng] as [number, number])),
+      { padding: [32, 32], maxZoom: 15 }
+    );
+  }, [map, points]);
+
+  return null;
+}
+
 const Map = MapContainer as any;
 const MapTile = TileLayer as any;
 const MapMarker = Marker as any;
@@ -66,17 +132,24 @@ const MapTooltip = Tooltip as any;
 
 export default function Explore() {
   const navigate = useNavigate();
-  const isMobile = window.innerWidth < 768;
 
   const [carparks, setCarparks] = useState<Carpark[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const fetchParking = async () => {
       try {
         setLoading(true);
+        setError(null);
         const res = await fetch(`${API_URL}/api/parking/availability`);
 
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -96,6 +169,9 @@ export default function Explore() {
     const interval = setInterval(fetchParking, 60_000);
     return () => clearInterval(interval);
   }, []);
+
+  const validCarparks = carparks.filter((carpark) => isValidLocation(carpark.location));
+  const mapPoints = validCarparks.map((carpark) => carpark.location);
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -167,20 +243,21 @@ export default function Explore() {
         {!loading && !error && (
           <div className="w-full h-[55vh] rounded-2xl overflow-hidden shadow-lg border">
             <Map
-              center={[1.3521, 103.8198]}
-              zoom={13}
+              center={SINGAPORE_CENTER}
+              zoom={11}
               scrollWheelZoom={true}
               className="w-full h-full"
             >
+              <MapViewportController points={mapPoints} />
               <MapTile
                 attribution="&copy; OpenStreetMap contributors"
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              {carparks.map((cp, i) => (
+              {validCarparks.map((cp, i) => (
                 <MapMarker
                   key={`${cp.carparkNumber}-${i}`}
                   position={[cp.location.lat, cp.location.lng]}
-                  icon={createIcon(getMarkerColor(cp.availableLots))}
+                  icon={getMarkerIcon(cp.availableLots)}
                   eventHandlers={{
                     click: () => navigate(`/facility/${cp.carparkNumber}`)
                   }}
@@ -240,7 +317,7 @@ export default function Explore() {
             </h3>
             {!loading && (
               <span className="text-xs text-on-surface-variant">
-                {carparks.length} carpark{carparks.length !== 1 ? 's' : ''} found near your zones
+                {validCarparks.length} carpark{validCarparks.length !== 1 ? 's' : ''} found near your zones
               </span>
             )}
           </div>
