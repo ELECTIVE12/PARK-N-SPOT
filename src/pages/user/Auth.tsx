@@ -7,6 +7,17 @@ import { API_URL } from '../../lib/api';
 import smart from "../../components/images/smart.png";
 import findparkgo from "../../components/images/findparkgo.png";
 
+async function parseApiPayload(res: Response) {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  const text = await res.text();
+  return { message: text || `${res.status} ${res.statusText}` };
+}
+
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -33,7 +44,7 @@ export function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
+      const data = await parseApiPayload(res);
       if (!res.ok) {
         if (data.googleAccount) {
           handleGoogleLogin();
@@ -47,7 +58,7 @@ export function Login() {
       localStorage.setItem('isLoggedIn', 'true');
       window.location.href = '/explore';
     } catch {
-      setError('Cannot connect to server. Make sure the backend is running.');
+      setError('Cannot reach the authentication server. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -284,7 +295,7 @@ export function SignUp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json();
+      const data = await parseApiPayload(res);
       if (!res.ok) {
         setError(data.message || 'Registration failed. Please try again.');
         return;
@@ -294,7 +305,7 @@ export function SignUp() {
       localStorage.setItem('isLoggedIn', 'true');
       window.location.href = '/verify';
     } catch {
-      setError('Cannot connect to server. Make sure the backend is running.');
+      setError('Cannot reach the authentication server. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
