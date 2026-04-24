@@ -38,7 +38,7 @@ function AppContent() {
     };
   }, []);
 
-  const isAuthPage = ['/login', '/signup', '/verify', '/auth-success', '/reset-password'].includes(location.pathname);
+  const isAuthPage = ['/login', '/signup', '/verify', '/verify-email', '/auth-success', '/reset-password'].includes(location.pathname);
   const isAdminPage = location.pathname.startsWith('/admin');
   const isLandingPage = location.pathname === '/';
   const shouldHideNav = isAuthPage || isLandingPage || isAdminPage;
@@ -76,6 +76,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/verify-email" element={<Verify />} />
           <Route path="/auth-success" element={<AuthSuccess />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
