@@ -2,10 +2,14 @@ const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const User = require('../models/User');
 
+const DEFAULT_BACKEND_URL = 'https://park-n-spot-production.up.railway.app';
+
 const googleConfig = {
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL,
+  callbackURL:
+    process.env.GOOGLE_CALLBACK_URL ||
+    `${process.env.BACKEND_URL || DEFAULT_BACKEND_URL}/auth/google/callback`,
 };
 
 const isGoogleAuthConfigured = Boolean(
