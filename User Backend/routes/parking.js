@@ -3,7 +3,6 @@ const axios = require('axios');
 const ParkingCache = require('../models/ParkingCache');
 const router = express.Router();
 
-// Fixed coordinates to match actual LTA carpark locations
 const TARGET_ZONES = [
   { name: 'Orchard', lat: 1.3040, lng: 103.8340, radius: 0.8 },
   { name: 'Marina', lat: 1.2920, lng: 103.8560, radius: 0.8 },
@@ -22,7 +21,6 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Demo fallback data when both LTA API and DB are unavailable
 const DEMO_CARPARKS = [
   { carparkNumber: 'OM1', area: 'Orchard', development: 'ION Orchard', location: { lat: 1.3040, lng: 103.8340 }, availableLots: 45, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date() },
   { carparkNumber: 'OM2', area: 'Orchard', development: 'Takashimaya', location: { lat: 1.3035, lng: 103.8335 }, availableLots: 12, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date() },
@@ -40,12 +38,14 @@ router.get('/availability', async (req, res) => {
   try {
     const response = await axios.get(
       'https://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2',
-      { headers: { AccountKey: process.env.LTA_API_KEY, accept: 'application/json' } }
+      {
+        headers: { AccountKey: process.env.LTA_API_KEY, accept: 'application/json' },
+        timeout: 8000, // ← 8 second timeout so fallback kicks in before Railway kills it
+      }
     );
 
     const allCarparks = response.data.value;
 
-    // Filter to carparks near your 3 zones
     const relevant = allCarparks.filter((cp) => {
       if (!cp.Location) return false;
       const [lat, lng] = cp.Location.split(' ').map(Number);
@@ -54,7 +54,6 @@ router.get('/availability', async (req, res) => {
       );
     });
 
-    // Cache to MongoDB
     await ParkingCache.deleteMany({});
     const toInsert = relevant.map((cp) => {
       const [lat, lng] = (cp.Location || '0 0').split(' ').map(Number);
@@ -71,12 +70,13 @@ router.get('/availability', async (req, res) => {
     });
 
     await ParkingCache.insertMany(toInsert);
-
     res.json({ success: true, count: relevant.length, data: toInsert });
+
   } catch (err) {
     console.error('LTA API Error:', err.message);
+
+    // Fallback 1: return last cached data from MongoDB
     try {
-      // Fallback 1: return last cached data
       const cached = await ParkingCache.find().sort({ fetchedAt: -1 });
       if (cached.length > 0) {
         return res.json({ success: true, count: cached.length, data: cached, fromCache: true });
@@ -84,15 +84,20 @@ router.get('/availability', async (req, res) => {
     } catch (dbErr) {
       console.error('DB fallback error:', dbErr.message);
     }
+
     // Fallback 2: return demo data so the map always works
-    res.json({ success: true, count: DEMO_CARPARKS.length, data: DEMO_CARPARKS, fromCache: true });
+    return res.json({ success: true, count: DEMO_CARPARKS.length, data: DEMO_CARPARKS, fromCache: true });
   }
 });
 
-// GET /parking/cached — just return DB data without hitting LTA
+// GET /parking/cached
 router.get('/cached', async (req, res) => {
-  const data = await ParkingCache.find().sort({ fetchedAt: -1 });
-  res.json({ success: true, data });
+  try {
+    const data = await ParkingCache.find().sort({ fetchedAt: -1 });
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;
