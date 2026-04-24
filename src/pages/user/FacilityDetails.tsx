@@ -58,6 +58,22 @@ const redIcon = makeIcon('red');
 const getCarparkIcon = (lots: number) =>
   lots > 20 ? greenIcon : lots > 0 ? yellowIcon : redIcon;
 
+async function parseApiPayload(res: Response) {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  const text = await res.text();
+  const stripped = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  throw new Error(
+    stripped ||
+      `API returned ${contentType || 'a non-JSON response'} instead of JSON.`
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function haversineKm(a: LatLng, b: LatLng): number {
@@ -113,7 +129,7 @@ function NavigationModal({
     try {
       const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
       const res = await fetch(url);
-      const data = await res.json();
+      const data = await parseApiPayload(res);
       if (data.routes?.[0]) {
         setRoutePoints(
           data.routes[0].geometry.coordinates.map(([lng, lat]: [number, number]) => ({ lat, lng }))
@@ -332,7 +348,7 @@ export default function FacilityDetails() {
       setError(null);
       const res = await fetch(`${API_URL}/api/parking/availability`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
+      const data = await parseApiPayload(res);
       const all: Carpark[] = data.data ?? [];
       setAllCarparks(all);
       const found = all.find(cp => cp.carparkNumber === id);
