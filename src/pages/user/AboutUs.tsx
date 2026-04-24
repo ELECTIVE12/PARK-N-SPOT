@@ -14,6 +14,7 @@ import kylle from "../../components/images/kylle.jpeg";
 import ervin from "../../components/images/ervin.jpg";
 
 export default function AboutUs() {
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token');
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -43,13 +44,19 @@ export default function AboutUs() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              to="/login"
+              to={isLoggedIn ? '/explore' : '/login'}
               className="bg-[#660000] text-surface-container px-10 py-4 font-headline font-bold rounded-sm tracking-wide hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 flex items-center justify-center gap-2"
             >
-
-              Get Started <ArrowRight size={16} />
+              {isLoggedIn ? 'Go to Dashboard' : 'Get Started'} <ArrowRight size={16} />
             </Link>
-
+            {isLoggedIn && (
+              <Link
+                to="/explore"
+                className="border border-[#660000] text-[#660000] px-10 py-4 font-headline font-bold rounded-sm tracking-wide hover:bg-[#660000] hover:text-white transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                Open Map <MapIcon size={16} />
+              </Link>
+            )}
           </div>
         </motion.div>
 
