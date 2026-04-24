@@ -30,8 +30,27 @@ export function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'google-auth-failed') {
+      setError('Google authentication failed. Please try again.');
+    }
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (!res.ok) {
+        throw new Error('Google sign-in is temporarily unavailable.');
+      }
+      window.location.href = `${API_URL}/auth/google`;
+    } catch {
+      setError('Google sign-in is temporarily unavailable. Please try again in a moment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -47,7 +66,10 @@ export function Login() {
       const data = await parseApiPayload(res);
       if (!res.ok) {
         if (data.googleAccount) {
-          handleGoogleLogin();
+          setError(
+            data.message ||
+              'This account uses Google Sign-In. Use Google to continue, or use Forgot Password to create a password for email login.'
+          );
           return;
         }
         setError(data.message || 'Login failed. Please try again.');
@@ -311,8 +333,20 @@ export function SignUp() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    window.location.href = `${API_URL}/auth/google`;
+  const handleGoogleSignUp = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (!res.ok) {
+        throw new Error('Google sign-up is temporarily unavailable.');
+      }
+      window.location.href = `${API_URL}/auth/google`;
+    } catch {
+      setError('Google sign-up is temporarily unavailable. Please try again in a moment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -552,6 +586,7 @@ export function AuthSuccess() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const name = params.get('name');
+
     if (token) {
       localStorage.setItem('token', token);
       localStorage.setItem('userName', name ?? '');
