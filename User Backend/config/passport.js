@@ -24,7 +24,7 @@ if (isGoogleAuthConfigured) {
       googleConfig,
       async (accessToken, refreshToken, profile, done) => {
         try {
-          const email = profile.emails?.[0]?.value;
+          const email = profile.emails?.[0]?.value?.trim().toLowerCase();
           if (!email) return done(new Error('No email from Google'), null);
 
           let user = await User.findOne({ email });
@@ -34,9 +34,13 @@ if (isGoogleAuthConfigured) {
               name: profile.displayName,
               email,
               googleId: profile.id,
+              isVerified: true,
             });
           } else if (!user.googleId) {
             user.googleId = profile.id;
+            user.isVerified = true;
+            user.verificationToken = undefined;
+            user.verificationTokenExpires = undefined;
             await user.save();
           }
 

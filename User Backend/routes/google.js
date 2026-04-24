@@ -17,9 +17,19 @@ const googleDisabledHandler = (_req, res) => {
 if (isGoogleAuthConfigured) {
   router.get('/', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+  const buildFailureRedirect = (req) => {
+    const clientUrl = process.env.CLIENT_URL || DEFAULT_CLIENT_URL;
+    return `${clientUrl}/login?error=google-auth-failed`;
+  };
+
   router.get(
     '/callback',
-    passport.authenticate('google', { failureRedirect: '/login', session: false }),
+    (req, res, next) => {
+      passport.authenticate('google', {
+        failureRedirect: buildFailureRedirect(req),
+        session: false,
+      })(req, res, next);
+    },
     async (req, res) => {
       const token = generateToken(req.user._id);
       const name = encodeURIComponent(req.user.name);
