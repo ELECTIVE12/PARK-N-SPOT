@@ -53,5 +53,6 @@ app.use('/api/parking', parkingRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => res.json({ message: 'Park n Spot API running' }));
+app.get('/health', (_req, res) => res.status(200).json({ ok: true }));
 
 module.exports = app;
