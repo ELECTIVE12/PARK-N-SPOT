@@ -7,6 +7,9 @@ const isBrowser = typeof window !== 'undefined';
 const isLocalHost =
   isBrowser &&
   ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const preferLocalApi =
+  isLocalHost &&
+  import.meta.env.VITE_USE_REMOTE_API !== 'true';
 
 const normalizeUrl = (url?: string) => url?.trim().replace(/\/+$/, '');
 
@@ -19,6 +22,10 @@ function resolveApiUrl(
   productionUrl: string
 ) {
   const normalizedUrl = normalizeUrl(configuredUrl);
+
+  if (preferLocalApi) {
+    return localUrl;
+  }
 
   if (normalizedUrl) {
     // Ignore localhost values when the app is running on a deployed domain.

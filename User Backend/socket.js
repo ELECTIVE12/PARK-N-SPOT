@@ -1,12 +1,18 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const { isAllowedOrigin } = require('./config/allowedOrigins');
 
 let io = null;
-const DEFAULT_CLIENT_URL = 'https://parknspott.com';
 
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL || DEFAULT_CLIENT_URL, credentials: true },
+    cors: {
+      origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) return callback(null, true);
+        callback(new Error(`Socket.IO CORS blocked: ${origin}`));
+      },
+      credentials: true,
+    },
   });
 
   io.use((socket, next) => {
