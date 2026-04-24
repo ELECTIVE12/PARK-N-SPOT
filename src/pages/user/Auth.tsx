@@ -41,14 +41,9 @@ export function Login() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/health`);
-      if (!res.ok) {
-        throw new Error('Google sign-in is temporarily unavailable.');
-      }
       window.location.href = `${API_URL}/auth/google`;
     } catch {
       setError('Google sign-in is temporarily unavailable. Please try again in a moment.');
-    } finally {
       setLoading(false);
     }
   };
@@ -337,14 +332,9 @@ export function SignUp() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/health`);
-      if (!res.ok) {
-        throw new Error('Google sign-up is temporarily unavailable.');
-      }
       window.location.href = `${API_URL}/auth/google`;
     } catch {
       setError('Google sign-up is temporarily unavailable. Please try again in a moment.');
-    } finally {
       setLoading(false);
     }
   };

@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import { API_URL } from '../src/lib/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const canUseRealtimeSocket =
+  typeof API_URL === 'string' &&
+  (API_URL.startsWith('http://') || API_URL.startsWith('https://'));
 
 export function useNotifications(token) {
   const [notifications, setNotifications] = useState([]);
@@ -26,7 +29,7 @@ export function useNotifications(token) {
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !canUseRealtimeSocket) return;
     const socket = io(API_URL, { auth: { token }, transports: ['websocket'] });
     socket.on('notification:new', (n) => {
       setNotifications((prev) => [n, ...prev]);
