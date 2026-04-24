@@ -1,4 +1,4 @@
-const USER_LOCAL_API_URL = 'http://localhost:5000';
+const USER_LOCAL_API_URL = ''; // Vite dev proxy handles forwarding /api to localhost:5000
 const USER_PROD_API_URL = '/api/user';
 const ADMIN_LOCAL_API_URL = 'http://localhost:5001';
 const ADMIN_PROD_API_URL = 'https://incredible-adventure-production.up.railway.app';

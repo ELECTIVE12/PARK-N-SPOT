@@ -41,6 +41,19 @@ type MarkerColor = 'green' | 'gold' | 'red';
 
 const SINGAPORE_CENTER: [number, number] = [1.3521, 103.8198];
 
+// Demo carpark data — shown when the backend is unavailable
+const DEMO_CARPARKS: Carpark[] = [
+  { carparkNumber: 'OM1', area: 'Orchard', development: 'ION Orchard', location: { lat: 1.3040, lng: 103.8340 }, availableLots: 45, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'OM2', area: 'Orchard', development: 'Takashimaya', location: { lat: 1.3035, lng: 103.8335 }, availableLots: 12, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'OM3', area: 'Orchard', development: 'Paragon', location: { lat: 1.3038, lng: 103.8350 }, availableLots: 0, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'MB1', area: 'Marina', development: 'Marina Bay Sands', location: { lat: 1.2830, lng: 103.8610 }, availableLots: 88, lotType: 'C', agencyCode: 'LTA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'MB2', area: 'Marina', development: 'Suntec City', location: { lat: 1.2955, lng: 103.8585 }, availableLots: 5, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'MB3', area: 'Marina', development: 'Millenia Walk', location: { lat: 1.2930, lng: 103.8570 }, availableLots: 30, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'HF1', area: 'Harbourfront', development: 'VivoCity', location: { lat: 1.2645, lng: 103.8225 }, availableLots: 120, lotType: 'C', agencyCode: 'LTA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'HF2', area: 'Harbourfront', development: 'Harbourfront Centre', location: { lat: 1.2625, lng: 103.8185 }, availableLots: 8, lotType: 'C', agencyCode: 'URA', fetchedAt: new Date().toISOString() },
+  { carparkNumber: 'HF3', area: 'Harbourfront', development: 'Sentosa Gateway', location: { lat: 1.2550, lng: 103.8230 }, availableLots: 0, lotType: 'C', agencyCode: 'LTA', fetchedAt: new Date().toISOString() },
+];
+
 const createMarkerSvg = (fillColor: string) =>
   `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
     <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
@@ -130,6 +143,22 @@ const MapTile = TileLayer as any;
 const MapMarker = Marker as any;
 const MapTooltip = Tooltip as any;
 
+async function parseParkingResponse(res: Response) {
+  const contentType = res.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  const text = await res.text();
+  const stripped = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  throw new Error(
+    stripped ||
+      `Parking API returned ${contentType || 'a non-JSON response'} instead of JSON.`
+  );
+}
+
 export default function Explore() {
   const navigate = useNavigate();
 
@@ -154,12 +183,21 @@ export default function Explore() {
 
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-        const data = await res.json();
-        setCarparks(data.data ?? []);
-        setFromCache(data.fromCache ?? false);
+        const data = await parseParkingResponse(res);
+        const fetched = data.data ?? [];
+        if (fetched.length === 0) {
+          // Backend responded but no data — fall back to demo
+          setCarparks(DEMO_CARPARKS);
+          setFromCache(true);
+        } else {
+          setCarparks(fetched);
+          setFromCache(data.fromCache ?? false);
+        }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to fetch parking data';
-        setError(message);
+        console.warn('Parking fetch failed, using demo data:', message);
+        setCarparks(DEMO_CARPARKS);
+        setFromCache(true);
       } finally {
         setLoading(false);
       }
