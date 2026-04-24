@@ -77,23 +77,11 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
     const user = await User.create({
       name,
       email,
       password,
-      verificationToken: crypto
-        .createHash('sha256')
-        .update(verificationToken)
-        .digest('hex'),
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
-    });
-
-    await transporter.sendMail({
-      from: `"Park 'n Spot" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Verify your Park'n Spot account",
-      html: `<p>Click <a href="${buildVerifyUrl(verificationToken)}">here</a> to verify your email. Link expires in 24 hours.</p>`,
+      isVerified: true,
     });
 
     res.status(201).json({

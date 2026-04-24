@@ -327,7 +327,8 @@ export function SignUp() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('isLoggedIn', 'true');
-      window.location.href = '/verify';
+      window.dispatchEvent(new Event('auth-change'));
+      window.location.href = '/explore';
     } catch {
       setError('Cannot reach the authentication server. Please try again in a moment.');
     } finally {
