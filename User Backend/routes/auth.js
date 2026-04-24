@@ -4,9 +4,9 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
-// Nodemailer transporter (Gmail)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -18,33 +18,89 @@ const transporter = nodemailer.createTransport({
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-// POST /api/auth/signup
-router.post('/signup', async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ message: 'Email already registered' });
+const normalizeEmail = (email = '') => email.trim().toLowerCase();
 
-    const token = crypto.randomBytes(32).toString('hex');
+const buildVerifyUrl = (token) => `${process.env.CLIENT_URL}/verify-email?token=${token}`;
+const buildResetUrl = (token) => `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+
+const issuePasswordReset = async (user) => {
+  const token = crypto.randomBytes(32).toString('hex');
+  user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+  user.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
+  await user.save();
+
+  const resetUrl = buildResetUrl(token);
+
+  await transporter.sendMail({
+    from: `"Park 'n Spot" <${process.env.EMAIL_USER}>`,
+    to: user.email,
+    subject: "Password Reset Request - Park'n Spot",
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
+        <h2 style="color:#660000;margin-bottom:8px;">Park 'n Spot</h2>
+        <h3 style="color:#111827;">Set or Reset Your Password</h3>
+        <p style="color:#374151;font-size:14px;">Click the button below to create or update your Park 'n Spot password. This link expires in <strong>1 hour</strong>.</p>
+        <a href="${resetUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#660000;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px;">Set Password</a>
+        <p style="color:#6b7280;font-size:12px;">If you didn't request this, you can safely ignore this email.</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+        <p style="color:#9ca3af;font-size:11px;">Park 'n Spot - Smart Parking</p>
+      </div>
+    `,
+  });
+};
+
+router.post('/signup', async (req, res) => {
+  const { name, password } = req.body;
+  const email = normalizeEmail(req.body.email);
+
+  try {
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      if (existingUser.googleId && !existingUser.password) {
+        existingUser.name = name || existingUser.name;
+        existingUser.password = password;
+        existingUser.isVerified = true;
+        existingUser.verificationToken = undefined;
+        existingUser.verificationTokenExpires = undefined;
+        await existingUser.save();
+
+        return res.status(200).json({
+          _id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          token: generateToken(existingUser._id),
+          message: 'Password login has been enabled for your Google account.',
+        });
+      }
+
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
     const user = await User.create({
-      name, email, password,
-      verificationToken: crypto.createHash('sha256').update(token).digest('hex'),
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
+      name,
+      email,
+      password,
+      verificationToken: crypto
+        .createHash('sha256')
+        .update(verificationToken)
+        .digest('hex'),
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
     await transporter.sendMail({
       from: `"Park 'n Spot" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: 'Verify your Park\'n Spot account',
-      html: `<p>Click <a href="${verifyUrl}">here</a> to verify your email. Link expires in 24 hours.</p>`,
+      subject: "Verify your Park'n Spot account",
+      html: `<p>Click <a href="${buildVerifyUrl(verificationToken)}">here</a> to verify your email. Link expires in 24 hours.</p>`,
     });
 
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id)
+      token: generateToken(user._id),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -53,13 +109,17 @@ router.post('/signup', async (req, res) => {
 
 router.get('/verify-email', async (req, res) => {
   const { token } = req.query;
+
   try {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
       verificationToken: hashedToken,
       verificationTokenExpires: { $gt: Date.now() },
     });
-    if (!user) return res.status(400).json({ message: 'Invalid or expired verification link.' });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification link.' });
+    }
 
     user.isVerified = true;
     user.verificationToken = undefined;
@@ -82,12 +142,11 @@ router.post('/resend-verification', protect, async (req, res) => {
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
     await transporter.sendMail({
       from: `"Park 'n Spot" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: 'Verify your Park\'n Spot account',
-      html: `<p>Click <a href="${verifyUrl}">here</a> to verify your email.</p>`,
+      subject: "Verify your Park'n Spot account",
+      html: `<p>Click <a href="${buildVerifyUrl(token)}">here</a> to verify your email.</p>`,
     });
 
     res.json({ message: 'Verification email resent.' });
@@ -96,9 +155,10 @@ router.post('/resend-verification', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const email = normalizeEmail(req.body.email);
+  const { password } = req.body;
+
   try {
     const user = await User.findOne({ email });
 
@@ -106,11 +166,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'No account found with this email.' });
     }
 
-    // If account has a googleId, always redirect to Google
-    if (user.googleId) {
+    if (user.googleId && !user.password) {
       return res.status(401).json({
         googleAccount: true,
-        message: 'This account uses Google Sign-In.'
+        canSetPassword: true,
+        message:
+          'This account uses Google Sign-In. Continue with Google, or use Forgot Password to create a password for email login.',
       });
     }
 
@@ -122,14 +183,13 @@ router.post('/login', async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id)
+      token: generateToken(user._id),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET /api/auth/me
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -139,10 +199,10 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
-// PUT /api/auth/me
 router.put('/me', protect, async (req, res) => {
   try {
-    const { name, username, email, mobile } = req.body;
+    const { name, username, mobile } = req.body;
+    const email = req.body.email ? normalizeEmail(req.body.email) : undefined;
 
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -165,7 +225,6 @@ router.put('/me', protect, async (req, res) => {
   }
 });
 
-// PUT /api/auth/change-password
 router.put('/change-password', protect, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -173,10 +232,18 @@ router.put('/change-password', protect, async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!user.password) return res.status(400).json({ message: 'Google accounts cannot change password here.' });
+    if (!user.password) {
+      user.password = newPassword;
+      await user.save();
+      return res.json({
+        message: 'Password set successfully. You can now log in with email and password too.',
+      });
+    }
 
     const isMatch = await user.matchPassword(currentPassword);
-    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect.' });
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect.' });
+    }
 
     user.password = newPassword;
     await user.save();
@@ -187,7 +254,6 @@ router.put('/change-password', protect, async (req, res) => {
   }
 });
 
-// GET /api/auth/locations
 router.get('/locations', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('savedLocations');
@@ -197,7 +263,6 @@ router.get('/locations', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/locations
 router.post('/locations', protect, async (req, res) => {
   try {
     const { name, info, icon } = req.body;
@@ -210,12 +275,11 @@ router.post('/locations', protect, async (req, res) => {
   }
 });
 
-// DELETE /api/auth/locations/:id
 router.delete('/locations/:id', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     user.savedLocations = user.savedLocations.filter(
-      loc => loc._id.toString() !== req.params.id
+      (location) => location._id.toString() !== req.params.id
     );
     await user.save();
     res.json({ success: true, data: user.savedLocations });
@@ -224,7 +288,6 @@ router.delete('/locations/:id', protect, async (req, res) => {
   }
 });
 
-// GET /api/auth/history
 router.get('/history', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('parkingHistory');
@@ -234,7 +297,6 @@ router.get('/history', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/history
 router.post('/history', protect, async (req, res) => {
   try {
     const { name, duration, date, status } = req.body;
@@ -247,42 +309,16 @@ router.post('/history', protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
-  console.log('📧 Forgot password hit:', req.body);
-  const { email } = req.body;
+  const email = normalizeEmail(req.body.email);
+
   try {
     const user = await User.findOne({ email });
-    // Always respond with success to prevent email enumeration
-    if (!user || user.googleId) {
+    if (!user) {
       return res.json({ message: 'If that email exists, a reset link has been sent.' });
     }
 
-    // Generate a secure token
-    const token = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
-    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
-    await user.save();
-
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
-
-    await transporter.sendMail({
-      from: `"Park 'n Spot" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: 'Password Reset Request – Park\'n Spot',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
-          <h2 style="color:#660000;margin-bottom:8px;">Park 'n Spot</h2>
-          <h3 style="color:#111827;">Reset Your Password</h3>
-          <p style="color:#374151;font-size:14px;">You requested a password reset. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
-          <a href="${resetUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#660000;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:14px;">Reset Password</a>
-          <p style="color:#6b7280;font-size:12px;">If you didn't request this, you can safely ignore this email.</p>
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-          <p style="color:#9ca3af;font-size:11px;">Park 'n Spot &mdash; Smart Parking</p>
-        </div>
-      `,
-    });
-
+    await issuePasswordReset(user);
     res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (err) {
     console.error('Forgot password error:', err);
@@ -290,9 +326,9 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// POST /api/auth/reset-password
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
+
   try {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
@@ -305,6 +341,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     user.password = password;
+    user.isVerified = true;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
