@@ -49,6 +49,14 @@ export default function AboutUs() {
             >
               {isLoggedIn ? 'Go to Dashboard' : 'Get Started'} <ArrowRight size={16} />
             </Link>
+            {!isLoggedIn && (
+              <Link
+                to="/signup"
+                className="border border-[#660000] text-[#660000] px-10 py-4 font-headline font-bold rounded-sm tracking-wide hover:bg-[#660000] hover:text-white transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                Create Account <Users size={16} />
+              </Link>
+            )}
             {isLoggedIn && (
               <Link
                 to="/explore"
