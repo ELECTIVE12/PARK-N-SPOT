@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, ArrowLeft, RefreshCw, Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Footer } from '../../components/Footer';
 import { API_URL } from '../../lib/api';
 import smart from "../../components/images/smart.png";
@@ -511,8 +511,40 @@ export function SignUp() {
 
 export function Verify() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const verificationToken = searchParams.get('token') ?? '';
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(Boolean(verificationToken));
+  const [verificationResult, setVerificationResult] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+
+  React.useEffect(() => {
+    if (!verificationToken) {
+      setVerificationLoading(false);
+      return;
+    }
+
+    const verifyEmail = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/verify-email?token=${encodeURIComponent(verificationToken)}`);
+        const data = await parseApiPayload(res);
+
+        if (!res.ok) {
+          setVerificationError(data.message || 'Verification failed. Please request a new verification email.');
+          return;
+        }
+
+        setVerificationResult(data.message || 'Email verified successfully. You can now log in.');
+      } catch {
+        setVerificationError('Cannot reach the authentication server. Please try again in a moment.');
+      } finally {
+        setVerificationLoading(false);
+      }
+    };
+
+    verifyEmail();
+  }, [verificationToken]);
 
   const handleResend = async () => {
     setResendLoading(true);
@@ -548,12 +580,49 @@ export function Verify() {
                 <Mail size={24} className="sm:w-6 sm:h-6 md:w-7 md:h-7 text-primary" />
               </div>
               <div className="space-y-3 sm:space-y-4">
-                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">Verify your<br />parking profile.</h1>
-                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">We've sent a secure confirmation link to your email. Click the link to activate your account.</p>
+                <h1 className="font-headline font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight leading-tight text-[#660000]">
+                  {verificationToken ? 'Confirming your' : 'Verify your'}<br />parking profile.
+                </h1>
+                <p className="text-on-surface-variant/80 text-xs sm:text-sm leading-relaxed font-body">
+                  {verificationToken
+                    ? 'We are validating your verification link now.'
+                    : "We've sent a secure confirmation link to your email. Click the link to activate your account."}
+                </p>
               </div>
             </div>
             <div className="w-full space-y-4">
-              {resendSent ? (
+              {verificationLoading ? (
+                <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-md">
+                  <div className="w-4 h-4 border-2 border-[#660000] border-t-transparent rounded-full animate-spin shrink-0" />
+                  <p className="text-xs text-on-surface-variant font-medium">Verifying your email...</p>
+                </div>
+              ) : verificationError ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-red-50 rounded-md">
+                    <Mail size={16} className="text-red-700 shrink-0" />
+                    <p className="text-xs text-red-700 font-medium">{verificationError}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="text-primary font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wide border-none bg-transparent cursor-pointer p-0"
+                  >
+                    Go to Login
+                  </button>
+                </div>
+              ) : verificationResult ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
+                    <Mail size={16} className="text-green-700 shrink-0" />
+                    <p className="text-xs text-green-700 font-medium">{verificationResult}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="text-primary font-headline font-bold text-[11px] sm:text-xs uppercase tracking-wide border-none bg-transparent cursor-pointer p-0"
+                  >
+                    Continue to Login
+                  </button>
+                </div>
+              ) : resendSent ? (
                 <div className="flex items-center gap-3 p-3 bg-green-50 rounded-md">
                   <Mail size={16} className="text-green-700 shrink-0" />
                   <p className="text-xs text-green-700 font-medium">Verification email resent! Check your inbox.</p>
@@ -608,6 +677,162 @@ export function AuthSuccess() {
           <p className="font-headline font-bold uppercase tracking-widest text-sm text-primary animate-pulse">Authenticating with Google...</p>
         </>
       )}
+    </div>
+  );
+}
+
+export function ResetPassword() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!token) {
+      setError('Reset link is invalid or missing.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
+
+    if (!passwordPattern.test(password)) {
+      setError('Password must be at least 8 characters and include letters, numbers, and symbols.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+
+      const data = await parseApiPayload(res);
+
+      if (!res.ok) {
+        setError(data.message || 'Unable to reset password. Please request a new reset link.');
+        return;
+      }
+
+      setSuccess(data.message || 'Password reset successful. You can now log in.');
+      setPassword('');
+      setConfirmPassword('');
+      window.setTimeout(() => navigate('/login'), 1500);
+    } catch {
+      setError('Cannot reach the authentication server. Please try again in a moment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-surface font-body text-on-surface min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-lg p-6 sm:p-8">
+        <button
+          type="button"
+          onClick={() => navigate('/login')}
+          className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors duration-200 group border-none bg-transparent cursor-pointer mb-6"
+        >
+          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
+          <span className="font-headline font-bold uppercase text-[10px] tracking-widest">Back to Login</span>
+        </button>
+
+        <div className="space-y-2 mb-6">
+          <h1 className="font-headline font-extrabold text-3xl tracking-tight text-[#660000]">Reset Password</h1>
+          <p className="text-sm text-on-surface-variant">
+            Enter a new password for your Park 'n Spot account.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700 text-xs font-headline font-bold">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-green-700 text-xs font-headline font-bold">{success}</p>
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="font-headline text-[11px] uppercase tracking-widest text-on-surface-variant font-bold">
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 px-4 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md pr-10"
+                placeholder="Enter a new password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-primary"
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-headline text-[11px] uppercase tracking-widest text-on-surface-variant font-bold">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                className="w-full bg-surface-container-high border-none focus:ring-2 focus:ring-outline text-on-surface py-3 px-4 text-sm transition-all duration-300 placeholder:text-outline/50 rounded-md pr-10"
+                placeholder="Confirm your new password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-primary"
+              >
+                {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs text-on-surface-variant">
+            Use at least 8 characters with letters, numbers, and symbols.
+          </p>
+
+          <button
+            type="submit"
+            disabled={loading || !token}
+            className="w-full bg-[#660000] py-3 text-surface-container-lowest border-none cursor-pointer font-headline font-bold text-xs tracking-[0.15em] uppercase hover:bg-primary-container transition-all duration-300 active:scale-[0.98] shadow-lg shadow-primary/10 text-center rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Updating Password...' : 'Reset Password'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
