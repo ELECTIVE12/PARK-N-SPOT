@@ -33,28 +33,21 @@ const DEMO_CARPARKS = [
   { carparkNumber: 'HF3', area: 'Harbourfront', development: 'Sentosa Gateway', location: { lat: 1.2550, lng: 103.8230 }, availableLots: 0, lotType: 'C', agencyCode: 'LTA', fetchedAt: new Date() },
 ];
 
-// GET /parking/availability
-router.get('/availability', async (req, res) => {
+async function fetchAndCacheLTA() {
   try {
     const response = await axios.get(
       'https://datamall2.mytransport.sg/ltaodataservice/CarParkAvailabilityv2',
       {
         headers: { AccountKey: process.env.LTA_API_KEY, accept: 'application/json' },
-        timeout: 8000, // ← 8 second timeout so fallback kicks in before Railway kills it
+        timeout: 15000,
       }
     );
-
     const allCarparks = response.data.value;
-
     const relevant = allCarparks.filter((cp) => {
       if (!cp.Location) return false;
       const [lat, lng] = cp.Location.split(' ').map(Number);
-      return TARGET_ZONES.some(
-        (zone) => getDistance(lat, lng, zone.lat, zone.lng) <= zone.radius
-      );
+      return TARGET_ZONES.some((zone) => getDistance(lat, lng, zone.lat, zone.lng) <= zone.radius);
     });
-
-    await ParkingCache.deleteMany({});
     const toInsert = relevant.map((cp) => {
       const [lat, lng] = (cp.Location || '0 0').split(' ').map(Number);
       return {
@@ -68,29 +61,32 @@ router.get('/availability', async (req, res) => {
         fetchedAt: new Date()
       };
     });
-
+    await ParkingCache.deleteMany({});
     await ParkingCache.insertMany(toInsert);
-    res.json({ success: true, count: relevant.length, data: toInsert });
-
+    console.log(`LTA cache updated: ${toInsert.length} carparks`);
   } catch (err) {
-    console.error('LTA API Error:', err.message);
+    console.error('Background LTA fetch failed:', err.message);
+  }
+}
 
-    // Fallback 1: return last cached data from MongoDB
-    try {
-      const cached = await ParkingCache.find().sort({ fetchedAt: -1 });
-      if (cached.length > 0) {
-        return res.json({ success: true, count: cached.length, data: cached, fromCache: true });
-      }
-    } catch (dbErr) {
-      console.error('DB fallback error:', dbErr.message);
+// Fetch on startup and every 5 minutes
+fetchAndCacheLTA();
+setInterval(fetchAndCacheLTA, 5 * 60 * 1000);
+
+// GET /api/parking/availability — always responds immediately from cache
+router.get('/availability', async (req, res) => {
+  try {
+    const cached = await ParkingCache.find().sort({ fetchedAt: -1 });
+    if (cached.length > 0) {
+      return res.json({ success: true, count: cached.length, data: cached, fromCache: true });
     }
-
-    // Fallback 2: return demo data so the map always works
+    return res.json({ success: true, count: DEMO_CARPARKS.length, data: DEMO_CARPARKS, fromCache: true });
+  } catch (err) {
+    console.error('DB error:', err.message);
     return res.json({ success: true, count: DEMO_CARPARKS.length, data: DEMO_CARPARKS, fromCache: true });
   }
 });
 
-// GET /parking/cached
 router.get('/cached', async (req, res) => {
   try {
     const data = await ParkingCache.find().sort({ fetchedAt: -1 });
