@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Building, Sparkles, LayoutGrid, ExternalLink, Zap, Users } from 'lucide-react';
+import { ArrowRight, Building, Sparkles, LayoutGrid, ExternalLink, Zap, Users, Map as MapIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Mail } from "lucide-react";
 import { Footer } from '../../components/Footer';
