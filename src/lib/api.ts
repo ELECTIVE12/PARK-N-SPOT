@@ -1,5 +1,5 @@
 const USER_LOCAL_API_URL = ''; // Vite dev proxy handles forwarding /api to localhost:5000
-const USER_PROD_API_URL = '/api/user';
+const USER_PROD_API_URL = 'https://park-n-spot-production.up.railway.app'; // ← FIXED
 const ADMIN_LOCAL_API_URL = 'http://localhost:5001';
 const ADMIN_PROD_API_URL = 'https://incredible-adventure-production.up.railway.app';
 
@@ -31,11 +31,9 @@ function resolveApiUrl(
   }
 
   if (normalizedUrl) {
-    // Ignore localhost values when the app is running on a deployed domain.
     if (!isLocalHost && isLocalUrl(normalizedUrl)) {
       return productionUrl;
     }
-
     return normalizedUrl;
   }
 
