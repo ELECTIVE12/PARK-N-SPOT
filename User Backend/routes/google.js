@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { passport, isGoogleAuthConfigured } = require('../config/passport');
 
 const router = express.Router();
+const DEFAULT_CLIENT_URL = 'https://parknspott.com';
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -22,7 +23,8 @@ if (isGoogleAuthConfigured) {
     async (req, res) => {
       const token = generateToken(req.user._id);
       const name = encodeURIComponent(req.user.name);
-      res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}&name=${name}`);
+      const clientUrl = process.env.CLIENT_URL || DEFAULT_CLIENT_URL;
+      res.redirect(`${clientUrl}/auth-success?token=${token}&name=${name}`);
     }
   );
 } else {
