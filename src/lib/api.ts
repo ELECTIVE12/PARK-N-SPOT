@@ -1,5 +1,5 @@
 const USER_LOCAL_API_URL = 'http://localhost:5000';
-const USER_PROD_API_URL = 'https://park-n-spot-production.up.railway.app';
+const USER_PROD_API_URL = '/api/user';
 const ADMIN_LOCAL_API_URL = 'http://localhost:5001';
 const ADMIN_PROD_API_URL = 'https://incredible-adventure-production.up.railway.app';
 
@@ -10,6 +10,9 @@ const isLocalHost =
 const preferLocalApi =
   isLocalHost &&
   import.meta.env.VITE_USE_REMOTE_API !== 'true';
+const preferUserApiProxy =
+  !isLocalHost &&
+  import.meta.env.VITE_FORCE_DIRECT_API !== 'true';
 
 const normalizeUrl = (url?: string) => url?.trim().replace(/\/+$/, '');
 
@@ -39,11 +42,13 @@ function resolveApiUrl(
   return isLocalHost ? localUrl : productionUrl;
 }
 
-export const API_URL = resolveApiUrl(
-  import.meta.env.VITE_API_URL,
-  USER_LOCAL_API_URL,
-  USER_PROD_API_URL
-);
+export const API_URL = preferUserApiProxy
+  ? USER_PROD_API_URL
+  : resolveApiUrl(
+      import.meta.env.VITE_API_URL,
+      USER_LOCAL_API_URL,
+      USER_PROD_API_URL
+    );
 
 export const ADMIN_API_URL = resolveApiUrl(
   import.meta.env.VITE_ADMIN_API_URL,
