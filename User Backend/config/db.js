@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./loadEnv');
 const mongoose = require('mongoose');
 
 const getMongoUri = () =>
