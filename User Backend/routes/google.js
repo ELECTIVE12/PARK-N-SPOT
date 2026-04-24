@@ -5,6 +5,11 @@ const { passport, isGoogleAuthConfigured } = require('../config/passport');
 const router = express.Router();
 const DEFAULT_CLIENT_URL = 'https://parknspott.com';
 
+const normalizeClientUrl = (url) => {
+  const trimmed = (url || DEFAULT_CLIENT_URL).trim().replace(/\/+$/, '');
+  return trimmed;
+};
+
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
@@ -18,7 +23,7 @@ if (isGoogleAuthConfigured) {
   router.get('/', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
   const buildFailureRedirect = (req) => {
-    const clientUrl = process.env.CLIENT_URL || DEFAULT_CLIENT_URL;
+    const clientUrl = normalizeClientUrl(process.env.CLIENT_URL);
     return `${clientUrl}/login?error=google-auth-failed`;
   };
 
@@ -33,7 +38,7 @@ if (isGoogleAuthConfigured) {
     async (req, res) => {
       const token = generateToken(req.user._id);
       const name = encodeURIComponent(req.user.name);
-      const clientUrl = process.env.CLIENT_URL || DEFAULT_CLIENT_URL;
+      const clientUrl = normalizeClientUrl(process.env.CLIENT_URL);
       res.redirect(`${clientUrl}/auth-success?token=${token}&name=${name}`);
     }
   );

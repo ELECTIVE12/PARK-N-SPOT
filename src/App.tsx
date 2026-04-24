@@ -26,17 +26,27 @@ function AppContent() {
   });
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token'));
-      setIsAdminLoggedIn(localStorage.getItem('isAdminLoggedIn') === 'true');
+    const checkAuth = () => {
+      const loggedIn = localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token');
+      const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+      setIsLoggedIn(loggedIn);
+      setIsAdminLoggedIn(adminLoggedIn);
     };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('auth-change', handleStorageChange);
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('auth-change', checkAuth);
+    // Also check on mount and when URL changes (for OAuth redirects)
+    checkAuth();
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('auth-change', handleStorageChange);
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('auth-change', checkAuth);
     };
   }, []);
+
+  // Re-check auth when location changes (important for OAuth callback navigation)
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('token');
+    setIsLoggedIn(loggedIn);
+  }, [location.pathname]);
 
   const isAuthPage = ['/login', '/signup', '/verify', '/verify-email', '/auth-success', '/reset-password'].includes(location.pathname);
   const isAdminPage = location.pathname.startsWith('/admin');
