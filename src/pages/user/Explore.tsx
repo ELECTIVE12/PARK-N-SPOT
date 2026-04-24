@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../lib/api';
 
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
@@ -76,7 +77,7 @@ export default function Explore() {
     const fetchParking = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:5000/api/parking/availability');
+        const res = await fetch(`${API_URL}/api/parking/availability`);
 
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
 

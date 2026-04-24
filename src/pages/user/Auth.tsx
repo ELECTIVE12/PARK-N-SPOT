@@ -3,10 +3,9 @@ import { motion } from 'motion/react';
 import { Mail, ArrowLeft, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Footer } from '../../components/Footer';
+import { API_URL } from '../../lib/api';
 import smart from "../../components/images/smart.png";
 import findparkgo from "../../components/images/findparkgo.png";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export function Login() {
   const navigate = useNavigate();

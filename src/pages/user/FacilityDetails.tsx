@@ -16,6 +16,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import findparkgo from '../../components/images/findparkgo.png';
+import { API_URL } from '../../lib/api';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -329,7 +330,7 @@ export default function FacilityDetails() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('http://localhost:5000/api/parking/availability');
+      const res = await fetch(`${API_URL}/api/parking/availability`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       const all: Carpark[] = data.data ?? [];
